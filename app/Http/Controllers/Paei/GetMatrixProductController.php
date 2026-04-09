@@ -62,13 +62,11 @@ class GetMatrixProductController extends Controller
             "sessionKey" => $this->api->client->sessionKey
          );
 
-dd($this->api->client);
 
         //  print_r($param);
         //  die;
         $res = $this->api->sendRequest("getProducts", $param,0,0,0);
 
-         dd($res);
          if($res['status']['errorCode'] == 0 && !empty($res['records'])){
 
             return $this->service->saveUpdate($res['records']);

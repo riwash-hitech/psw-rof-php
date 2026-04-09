@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Paei\Services;
 
 use App\Classes\UserLogger;
@@ -8,7 +9,8 @@ use App\Models\PAEI\{MatrixProduct, ProductGroup, Supplier, TempDate, UserOperat
 use App\Models\PswClientLive\Local\{LiveProductMatrix, LiveProductVariation};
 use App\Traits\UserOperationTrait;
 
-class GetProductService implements UserOperationInterface{
+class GetProductService implements UserOperationInterface
+{
 
     protected $matrix;
     protected $liveProductMatrix;
@@ -19,7 +21,8 @@ class GetProductService implements UserOperationInterface{
     // protected $userOperationService;
     use UserOperationTrait;
 
-    public function __construct(MatrixProduct $mp, LiveProductMatrix $liveProductMatrix ,VariationProduct $vp, LiveProductVariation $vpLive, UserLogger $logger, EAPIService $api){
+    public function __construct(MatrixProduct $mp, LiveProductMatrix $liveProductMatrix, VariationProduct $vp, LiveProductVariation $vpLive, UserLogger $logger, EAPIService $api)
+    {
         $this->matrix = $mp;
         $this->liveProductMatrix = $liveProductMatrix;
         $this->variation = $vp;
@@ -29,50 +32,54 @@ class GetProductService implements UserOperationInterface{
         // $this->userOperationService = $userOperationService;
     }
 
-    public function saveUpdate($products){
+    public function saveUpdate($products)
+    {
+        $responseData = [];
+        foreach ($products as $key =>  $p) {
 
-        foreach($products as $p){
+            // dd($p);
 
-        // dd($p);
-
-            if($p['type'] == "MATRIX"){
+            if ($p['type'] == "MATRIX") {
 
                 $this->matrixSaveUpdate($p, $this->api->client->clientCode);
+            } else {
 
-            }else{
 
-
-            continue;
-// dd('variation',$p);
-                if(!str_contains($p["code"], "PSW") && $this->api->client->clientCode == 603303){
-                    $this->variationSaveUpdate($p);
-                }else{
+                // continue;
+                // dd('variation',$p);
+                if (!str_contains($p["code"], "PSW") && $this->api->client->clientCode == 603303) {
                     $this->variationSaveUpdate($p, $this->api->client->clientCode);
-
-                    dd('here save');
+                } else {
+                    $this->variationSaveUpdate($p, $this->api->client->clientCode);
                 }
-
             }
+
+            $responseData[] = [
+                'key ' => $key,
+                'id ' => $p['productID'] ?? null,
+                'message' => "Product with ID {$p['productID']} processed as " . ($p['type'] ?? 'Unknown Type')
+            ];
         }
 
-        dd('out');
+        dump($responseData);
 
-        return response()->json(['status'=>200, 'message'=>"Product fetched Successfully."]);
+
+        return response()->json(['status' => 200, 'message' => "Product fetched Successfully."]);
     }
 
-    public function saveUpdateByWebhook($product, $clientCode){
+    public function saveUpdateByWebhook($product, $clientCode)
+    {
 
         // foreach($products as $p){
-        if($product['type'] == "MATRIX"){
+        if ($product['type'] == "MATRIX") {
 
             $this->matrixSaveUpdate($product, $clientCode);
-
-        }else{
+        } else {
 
             // if(!str_contains($p["code"], "PSW") && $this->api->client->clientCode == 603303){
             //     $this->variationSaveUpdate($p);
             // }else{
-                $this->variationSaveUpdate($product, $clientCode);
+            $this->variationSaveUpdate($product, $clientCode);
             // }
 
         }
@@ -82,24 +89,24 @@ class GetProductService implements UserOperationInterface{
     }
 
 
-    public function saveUpdateV2($products){
+    public function saveUpdateV2($products)
+    {
 
-        info("Updated product : ".count($products));
-        if(count($products) >= 1){
-            info("PID : ". $products[0]["productID"]);
+        info("Updated product : " . count($products));
+        if (count($products) >= 1) {
+            info("PID : " . $products[0]["productID"]);
         }
 
-        foreach($products as $p){
-            if($p['type'] == "MATRIX"){
+        foreach ($products as $p) {
+            if ($p['type'] == "MATRIX") {
 
                 $this->matrixSaveUpdate($p, $this->api->client->clientCode);
-
-            }else{
+            } else {
 
                 // if(!str_contains($p["code"], "PSW") && $this->api->client->clientCode == 603303){
                 //     $this->variationSaveUpdate($p);
                 // }else{
-                    $this->variationSaveUpdate($p, $this->api->client->clientCode);
+                $this->variationSaveUpdate($p, $this->api->client->clientCode);
                 // }
 
             }
@@ -109,33 +116,32 @@ class GetProductService implements UserOperationInterface{
         $forUpdate = $pp->last();
         TempDate::where("id", 1)->update(["datetime" => date('Y-m-d H:i:s', $forUpdate['added'])]);
 
-        return response()->json(['status'=>200, 'message'=>"Product fetched Successfully."]);
+        return response()->json(['status' => 200, 'message' => "Product fetched Successfully."]);
     }
 
-    public function saveUpdatePIM($products){
+    public function saveUpdatePIM($products)
+    {
 
-        foreach($products as $p){
-            if($p['type'] == "MATRIX"){
+        foreach ($products as $p) {
+            if ($p['type'] == "MATRIX") {
 
                 $this->matrixSaveUpdatePIM($p);
+            } else {
 
-            }else{
-
-                if(!str_contains($p["code"], "PSW")){
+                if (!str_contains($p["code"], "PSW")) {
                     $this->variationSaveUpdatePIM($p);
                 }
-
             }
         }
 
-        return response()->json(['status'=>200, 'message'=>"Product fetched Successfully."]);
+        return response()->json(['status' => 200, 'message' => "Product fetched Successfully."]);
     }
 
 
     protected function matrixSaveUpdate(array $product, int $clientCode)
     {
         // Determine ERPLY flag
-        $erplyFlag = ($clientCode == 607655) ? 'academy' : 'PSW';
+        $erplyFlag = ($clientCode == 607655) ? '' : 'PSW';
 
         // Old record for logging
         $old = $this->liveProductMatrix
@@ -148,14 +154,29 @@ class GetProductService implements UserOperationInterface{
             ->where('productGroupID', $product['groupID'])
             ->first();
 
-            $attr = [];
+        $attr = [];
 
-            if(isset($product['attributes']) && is_array($product['attributes'])){
+        if (isset($product['attributes']) && is_array($product['attributes'])) {
             // Extract attributes from matrix
             $attr = array_column($product['attributes'], 'attributeValue', 'attributeName');
-            }
+        }
 
+        $webEnabled = 1;
+        $erplyEnabled = 1;
+        $erplyDeleted = 0;
 
+        // Normalize status
+        $status = strtolower($attr['status'] ?? '');
+
+        if ($status === 'not_for_sale') {
+            $webEnabled = 0;
+            $erplyEnabled = 0;
+        } elseif ($status === 'active') {
+            $webEnabled = 1;
+            $erplyEnabled = 1;
+        } elseif ($status === 'archived') {
+            $erplyDeleted = 1;
+        }
 
         // Assign all values safely
         $schoolId             = $attr['SchoolID'] ?? null;
@@ -197,13 +218,11 @@ class GetProductService implements UserOperationInterface{
         $schoolLastModified   = isset($attr['SchoolLastModified']) ? date('Y-m-d H:i:s', strtotime($attr['SchoolLastModified'])) : null;
         $priceLastModified    = isset($attr['PriceLastModified']) ? date('Y-m-d H:i:s', strtotime($attr['PriceLastModified'])) : null;
         $availableForPurchase = $attr['AvailableForPurchase'] ?? 1;
-        $webEnabled           = $attr['WebEnabled'] ?? 1;
         $customItemName       = $attr['customItemName'] ?? null;
         $receiptDescription   = $attr['receiptDescription'] ?? null;
         $barcodeDuplicate     = $attr['barcodeDuplicate'] ?? 0;
         $colorFlag            = $attr['colorFlag'] ?? 0;
         $genericProduct       = $attr['genericProduct'] ?? 0;
-        $erplyEnabled         = $attr['erplyEnabled'] ?? 0;
         $erplyError           = $attr['erplyError'] ?? null;
         $vUpdate              = $attr['vUpdate'] ?? 1;
         $mUpdate              = $attr['mUpdate'] ?? 1;
@@ -277,6 +296,7 @@ class GetProductService implements UserOperationInterface{
             'imageUrl' => $imageUrl,
             'variationPending' => $variationPending,
             'checkErply' => $checkErply,
+            'erplyDeleted' => $erplyDeleted
         ];
 
         // dd($fields);
@@ -299,7 +319,8 @@ class GetProductService implements UserOperationInterface{
     }
     protected function variationSaveUpdate($product, $clientCode)
     {
-        $erplyFlag = ($clientCode == 607655) ? 'academy' : 'PSW';
+
+        $erplyFlag = ($clientCode == 607655) ? '' : 'PSW';
 
         $school = ProductGroup::where('clientCode', $clientCode)
             ->where('productGroupID', $product['groupID'])
@@ -313,8 +334,25 @@ class GetProductService implements UserOperationInterface{
             $attr = array_column($product['attributes'], 'attributeValue', 'attributeName');
         }
 
+        $webEnabled = 1;
+        $erplyEnabled = 1;
+        $erplyDeleted = 0;
+
+        // Normalize status
+        $status = strtolower($attr['status'] ?? '');
+
+        if ($status === 'not_for_sale') {
+            $webEnabled = 0;
+            $erplyEnabled = 0;
+        } elseif ($status === 'active') {
+            $webEnabled = 1;
+            $erplyEnabled = 1;
+        } elseif ($status === 'archived') {
+            $erplyDeleted = 1;
+        }
+
         // ✅ ALL VARIABLES WITH SAFE FALLBACKS
-        $schoolId             = $attr['SchoolID'] ?? null;
+        $schoolId             = $attr['SchoolID'] ?? ($product['groupID'] ?? null);
         $schoolName           = $attr['SchoolName'] ?? ($school ? $school->name : null);
         $customerGroup        = $attr['CustomerGroup'] ?? null;
         $erplySKU             = $attr['ERPLYSKU'] ?? $product['code'] ?? null;
@@ -348,7 +386,6 @@ class GetProductService implements UserOperationInterface{
         $erplyFlagModified    = $attr['ERPLYFLAGModified'] ?? null;
         $sofLastModified      = $attr['SOFLastModified'] ?? null;
         $availableForPurchase = $attr['AvailableForPurchase'] ?? ($product['active'] ?? 0);
-        $webEnabled           = $attr['WebEnabled'] ?? ($product['displayedInWebshop'] ?? 0);
         $itemLastModified     = $attr['ItemLastModified'] ?? (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
         $schoolLastModified   = $attr['SchoolLastModified'] ?? null;
         $priceLastModified    = $attr['PriceLastModified'] ?? (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
@@ -364,12 +401,9 @@ class GetProductService implements UserOperationInterface{
         $stockPending         = $attr['stockPending'] ?? 1;
         $genericProduct       = $attr['genericProduct'] ?? 0;
         $checkErply           = $attr['checkErply'] ?? 1;
-        $erplyDeleted         = $attr['erplyDeleted'] ?? 0;
         $erplyError           = $attr['erplyError'] ?? null;
-        $deleted              = $attr['deleted'] ?? 0;
         $assortmentPending    = $attr['assortmentPending'] ?? 1;
         $assortmentRemovePending = $attr['assortmentRemovePending'] ?? 1;
-        $erplyEnabled         = $attr['erplyEnabled'] ?? ($product['active'] ?? 0);
         $imagePending         = $attr['imagePending'] ?? 1;
 
         // ✅ OLD RECORD
@@ -433,7 +467,7 @@ class GetProductService implements UserOperationInterface{
                 // STATUS
                 "AvailableForPurchase" => $availableForPurchase,
                 "WebEnabled"          => $webEnabled,
-                "deleted"             => $deleted,
+                "deleted"             => $erplyDeleted,
 
                 // SUPPLIER
                 "Supplier"            => $supplier,
@@ -501,164 +535,165 @@ class GetProductService implements UserOperationInterface{
             json_encode($change, true),
             $old ? "Variation Product Updated" : "Variation Product Created"
         );
-
     }
 
-    protected function matrixSaveUpdatePIM($product){
+    protected function matrixSaveUpdatePIM($product)
+    {
         $old = $this->matrix->where('productID', $product['id'])->first();
 
 
         $change = $this->matrix->updateOrCreate(
-                [
-                    "productID"  =>  $product['id']
-                ],
-                [
-                    "productID" => $product['id'],
-                    "type" => $product['type'],
-                    "active" => $product['active'],
-                    "status" => $product['status'],
-                    "name"  => $product['name']['en'],
-                    "code"  => $product['code'],
-                    "code2"  => @$product['code2'],
-                    "code3"  => @$product['code3'],
-                    "supplierCode"  => @$product['supplierCode'],
-                    "code5"  =>  @$product['code5'],
-                    "code6"  =>  @$product['code6'],
-                    "code7"  =>  @$product['code7'],
-                    "code8"  =>  @$product['code8'],
-                    "groupID"  => $product['group_id'],
-                    "groupName"  => $product['groupName'],
-                    "price"  => @$product['price'],
-                    "priceWithVat"  => @$product['priceWithVat'],
-                    "displayedInWebshop"  => @$product['displayedInWebshop'],
-                    "categoryID"  => @$product['categoryID'],
-                    "categoryName"  => @$product['categoryName'],
-                    "supplierID"  => @$product['supplierID'],
-                    "supplierName"  => @$product['supplierName'],
-                    "unitID"  => @$product['unit_id'],
-                    "unitName"  => @$product['unitName'],
-                    "taxFree"  => @$product['taxFree'],
-                    "deliveryTime"  => @$product['deliveryTime'],
-                    "vatrateID"  => @$product['vatrateID'],
-                    "vatrate"  => @$product['vatrate'],
-                    "hasQuickSelectButton"  => @$product['hasQuickSelectButton'],
-                    "isGiftCard"  => @$product['isGiftCard'],
-                    "isRegularGiftCard"  => @$product['isRegularGiftCard'],
-                    "nonDiscountable"  => @$product['nonDiscountable'],
-                    "nonRefundable"  => @$product['nonRefundable'],
-                    "manufacturerName"  => @$product['manufacturerName'],
-                    "priorityGroupID"  => @$product['priorityGroupID'],
-                    "countryOfOriginID"  => @$product['countryOfOriginID'],
-                    "brandID"  => @$product['brandID'],
-                    "brandName"  => @$product['brandName'],//today date time
-                    "width"  => @$product['width'],
-                    "height"  => @$product['height'],
-                    "length"  => @$product['length'],// today date
-                    "lengthInMinutes"  => @$product['lengthInMinutes'],
-                    "setupTimeInMinutes"  => @$product['setupTimeInMinutes'],
-                    "cleanupTimeInMinutes"  => @$product['cleanupTimeInMinutes'],
-                    "walkInService"  => @$product['walkInService'],
-                    "rewardPointsNotAllowed"  => @$product['rewardPointsNotAllowed'],
-                    "nonStockProduct"  => @$product['nonStockProduct'],
-                    "hasSerialNumbers"  => @$product['hasSerialNumbers'],
-                    "soldInPackages"  => @$product['soldInPackages'],
-                    "cashierMustEnterPrice"  => @$product['cashierMustEnterPrice'],
-                    "netWeight"  => $product['netWeight'] == '' ? 0 : $product['netWeight'],
-                    "grossWeight"  => $product['grossWeight'] == '' ? 0 : $product['grossWeight'],
-                    "volume"  => @$product['volume'],
-                    "description"  => $product['description'],
-                    "longdesc"  => $product['longdesc'],
-                    "descriptionENG"  => $product['description'],
-                    "longdescENG"  => $product['longdescENG'],
-                    "descriptionRUS"  => $product['descriptionRUS'],
-                    "longdescRUS"  => $product['longdescRUS'],
-                    "descriptionFIN"  => $product['descriptionFIN'],
-                    "longdescFIN"  => $product['longdescFIN'],
-                    "cost"  => $product['cost'],
-                    "FIFOCost"  => @$product['FIFOCost'],
-                    "purchasePrice"  => @$product['purchasePrice'],
-                    "backbarCharges"  => @$product['backbarCharges'],
-                    "added"  => date('Y-m-d H:i:s',$product['added']),
-                    "addedByUsername"  => $product['addedByUsername'],
-                    "lastModified"  => date('Y-m-d H:i:s', $product['lastModified']),
-                    "lastModifiedByUsername"  => $product['lastModifiedByUsername'],
-                    "images"  => !empty($product['images']) ? json_encode($product['images'],1) : '',
-                    "warehouses"  => !empty($product['warehouses']) ? json_encode($product['warehouses'],1) : '',
-                    "variationDescription"  => !empty($product['variationDescription']) ? json_encode($product['variationDescription'],1) : '',
-                    "productVariations"  => !empty($product['productVariations']) ? json_encode($product['productVariations'],1) : '',
-                    "variationList"  => !empty($product['variationList']) ? json_encode($product['variationList'],1) : '',
-                    "parentProductID"  => @$product['parentProductID'],
-                    "containerID"  => @$product['containerID'],
-                    "containerName"  => @$product['containerName'],
-                    "containerCode"  => @$product['containerCode'],
-                    "containerAmount"  => @$product['containerAmount'],
-                    "packagingType"  => $product['packagingType'],
-                    "packages"  => !empty($product['packages']) ? json_encode($product['packages'],1) : '',
-                    "productPackages"  => !empty($product['productPackages']) ? json_encode($product['productPackages'],1) : '',
-                    "replacementProducts"  => !empty($product['replacementProducts']) ? json_encode($product['replacementProducts'],1) : '',
-                    "relatedProducts"  => !empty($product['relatedProducts']) ? json_encode($product['relatedProducts'],1) : '',
-                    "relatedFiles"  => !empty($product['relatedFiles']) ? json_encode($product['relatedFiles'],1) : '',
-                    "productComponents"  => !empty($product['productComponents']) ? json_encode($product['productComponents'],1) : '',
-                    "priceListPrice"  => @$product['priceListPrice'],
-                    "priceListPriceWithVat"  => @$product['priceListPriceWithVat'],
-                    "priceCalculationSteps"  => !empty($product['priceCalculationSteps']) ? json_encode($product['priceCalculationSteps'],1) : '',
-                    "locationInWarehouse"  => @$product['locationInWarehouse'],
-                    "locationInWarehouseID"  => @$product['locationInWarehouseID'],
-                    "locationInWarehouseName"  => @$product['locationInWarehouseName'],
-                    "locationInWarehouseText"  => @$product['locationInWarehouseText'],
-                    "reorderMultiple"  => $product['reorderMultiple'],
-                    "extraField1Title"  => @$product['extraField1Title'],
-                    "extraField1ID"  => @$product['extraField1ID'],
-                    "extraField1Code"  => @$product['extra_field1_id'],
-                    "extraField1Name"  => @$product['extraField1Name'],
-                    "extraField2Title"  => @$product['extraField2Title'],
-                    "extraField2ID"  => @$product['extra_field2_id'],
-                    "extraField2Code"  => @$product['extraField2Code'],
-                    "extraField2Name"  => @$product['extraField2Name'],
-                    "extraField3Title"  => @$product['extraField3Title'],
-                    "extraField3ID"  => @$product['extra_field3_id'],
-                    "extraField3Code"  => @$product['extraField3Code'],
-                    "extraField3Name"  => @$product['extraField3Name'],
-                    "extraField4Title"  => @$product['extraField4Title'],
-                    "extraField4ID"  => @$product['extra_field4_id'],
-                    "extraField4Code"  => @$product['extraField4Code'],
-                    "extraField4Name"  => @$product['extraField4Name'],
-                    "salesPackageClearBrownGlass"  => @$product['salesPackageClearBrownGlass'],
-                    "salesPackageGreenOtherGlass"  => @$product['salesPackageGreenOtherGlass'],
-                    "salesPackagePlasticPpPe"  => @$product['salesPackagePlasticPpPe'],
-                    "salesPackagePlasticPet"  => @$product['salesPackagePlasticPet'],
-                    "salesPackageMetalFe"  => @$product['salesPackageMetalFe'],
-                    "salesPackageMetalAl"  => @$product['salesPackageMetalAl'],
-                    "salesPackageOtherMetal"  => @$product['salesPackageOtherMetal'],
-                    "salesPackageCardboard"  => @$product['salesPackageCardboard'],
-                    "salesPackageWood"  => @$product['salesPackageWood'],
-                    "groupPackagePaper"  => @$product['groupPackagePaper'],
-                    "groupPackagePlastic"  => @$product['groupPackagePlastic'],
-                    "groupPackageMetal"  => @$product['groupPackageMetal'],
-                    "groupPackageWood"  => @$product['groupPackageWood'],
-                    "transportPackageWood"  => @$product['transportPackageWood'],
-                    "transportPackagePlastic"  => @$product['transportPackagePlastic'],
-                    "transportPackageCardboard"  => @$product['transportPackageCardboard'],
-                    "registryNumber"  => $product['registryNumber'],
-                    "alcoholPercentage"  => isset($product['alcoholPercentage']) ? ($product['alcoholPercentage'] == '' ? 0 : $product['alcoholPercentage']) : 0,
-                    "batches"  => $product['batches'],
-                    "exciseDeclaration"  => $product['exciseDeclaration'],
-                    "exciseFermentedProductUnder6"  => $product['exciseFermentedProductUnder6'] == '' ? 0.0 : $product['exciseFermentedProductUnder6'],
-                    "exciseWineOver6"  => @$product['exciseWineOver6'] == '' ? 0.0 : $product['exciseWineOver6'],
-                    "exciseFermentedProductOver6"  => @$product['exciseFermentedProductOver6'] == '' ? 0.0 : $product['exciseFermentedProductOver6'],
-                    "exciseIntermediateProduct"  => @$product['exciseIntermediateProduct'] == '' ? 0.0 : $product['exciseIntermediateProduct'],
-                    "exciseOtherAlcohol"  => @$product['exciseOtherAlcohol'] == '' ? 0.0 : $product['exciseOtherAlcohol'],
-                    "excisePackaging"  => @$product['excisePackaging'] == '' ? 0.0 : $product['excisePackaging'],
-                    "attributes"  => !empty($product['attributes']) ? json_encode($product['attributes'],1) : '',
-                    "longAttributes"  => !empty($product['longAttributes']) ? json_encode($product['longAttributes'],1) : '',
-                    "parameters"  => !empty($product['parameters']) ? json_encode($product['parameters'],1) : '',
-                    "productReplacementHistory"  => !empty($product['productReplacementHistory']) ? json_encode($product['productReplacementHistory'],1) : '',
-                ]
-            );
+            [
+                "productID"  =>  $product['id']
+            ],
+            [
+                "productID" => $product['id'],
+                "type" => $product['type'],
+                "active" => $product['active'],
+                "status" => $product['status'],
+                "name"  => $product['name']['en'],
+                "code"  => $product['code'],
+                "code2"  => @$product['code2'],
+                "code3"  => @$product['code3'],
+                "supplierCode"  => @$product['supplierCode'],
+                "code5"  =>  @$product['code5'],
+                "code6"  =>  @$product['code6'],
+                "code7"  =>  @$product['code7'],
+                "code8"  =>  @$product['code8'],
+                "groupID"  => $product['group_id'],
+                "groupName"  => $product['groupName'],
+                "price"  => @$product['price'],
+                "priceWithVat"  => @$product['priceWithVat'],
+                "displayedInWebshop"  => @$product['displayedInWebshop'],
+                "categoryID"  => @$product['categoryID'],
+                "categoryName"  => @$product['categoryName'],
+                "supplierID"  => @$product['supplierID'],
+                "supplierName"  => @$product['supplierName'],
+                "unitID"  => @$product['unit_id'],
+                "unitName"  => @$product['unitName'],
+                "taxFree"  => @$product['taxFree'],
+                "deliveryTime"  => @$product['deliveryTime'],
+                "vatrateID"  => @$product['vatrateID'],
+                "vatrate"  => @$product['vatrate'],
+                "hasQuickSelectButton"  => @$product['hasQuickSelectButton'],
+                "isGiftCard"  => @$product['isGiftCard'],
+                "isRegularGiftCard"  => @$product['isRegularGiftCard'],
+                "nonDiscountable"  => @$product['nonDiscountable'],
+                "nonRefundable"  => @$product['nonRefundable'],
+                "manufacturerName"  => @$product['manufacturerName'],
+                "priorityGroupID"  => @$product['priorityGroupID'],
+                "countryOfOriginID"  => @$product['countryOfOriginID'],
+                "brandID"  => @$product['brandID'],
+                "brandName"  => @$product['brandName'], //today date time
+                "width"  => @$product['width'],
+                "height"  => @$product['height'],
+                "length"  => @$product['length'], // today date
+                "lengthInMinutes"  => @$product['lengthInMinutes'],
+                "setupTimeInMinutes"  => @$product['setupTimeInMinutes'],
+                "cleanupTimeInMinutes"  => @$product['cleanupTimeInMinutes'],
+                "walkInService"  => @$product['walkInService'],
+                "rewardPointsNotAllowed"  => @$product['rewardPointsNotAllowed'],
+                "nonStockProduct"  => @$product['nonStockProduct'],
+                "hasSerialNumbers"  => @$product['hasSerialNumbers'],
+                "soldInPackages"  => @$product['soldInPackages'],
+                "cashierMustEnterPrice"  => @$product['cashierMustEnterPrice'],
+                "netWeight"  => $product['netWeight'] == '' ? 0 : $product['netWeight'],
+                "grossWeight"  => $product['grossWeight'] == '' ? 0 : $product['grossWeight'],
+                "volume"  => @$product['volume'],
+                "description"  => $product['description'],
+                "longdesc"  => $product['longdesc'],
+                "descriptionENG"  => $product['description'],
+                "longdescENG"  => $product['longdescENG'],
+                "descriptionRUS"  => $product['descriptionRUS'],
+                "longdescRUS"  => $product['longdescRUS'],
+                "descriptionFIN"  => $product['descriptionFIN'],
+                "longdescFIN"  => $product['longdescFIN'],
+                "cost"  => $product['cost'],
+                "FIFOCost"  => @$product['FIFOCost'],
+                "purchasePrice"  => @$product['purchasePrice'],
+                "backbarCharges"  => @$product['backbarCharges'],
+                "added"  => date('Y-m-d H:i:s', $product['added']),
+                "addedByUsername"  => $product['addedByUsername'],
+                "lastModified"  => date('Y-m-d H:i:s', $product['lastModified']),
+                "lastModifiedByUsername"  => $product['lastModifiedByUsername'],
+                "images"  => !empty($product['images']) ? json_encode($product['images'], 1) : '',
+                "warehouses"  => !empty($product['warehouses']) ? json_encode($product['warehouses'], 1) : '',
+                "variationDescription"  => !empty($product['variationDescription']) ? json_encode($product['variationDescription'], 1) : '',
+                "productVariations"  => !empty($product['productVariations']) ? json_encode($product['productVariations'], 1) : '',
+                "variationList"  => !empty($product['variationList']) ? json_encode($product['variationList'], 1) : '',
+                "parentProductID"  => @$product['parentProductID'],
+                "containerID"  => @$product['containerID'],
+                "containerName"  => @$product['containerName'],
+                "containerCode"  => @$product['containerCode'],
+                "containerAmount"  => @$product['containerAmount'],
+                "packagingType"  => $product['packagingType'],
+                "packages"  => !empty($product['packages']) ? json_encode($product['packages'], 1) : '',
+                "productPackages"  => !empty($product['productPackages']) ? json_encode($product['productPackages'], 1) : '',
+                "replacementProducts"  => !empty($product['replacementProducts']) ? json_encode($product['replacementProducts'], 1) : '',
+                "relatedProducts"  => !empty($product['relatedProducts']) ? json_encode($product['relatedProducts'], 1) : '',
+                "relatedFiles"  => !empty($product['relatedFiles']) ? json_encode($product['relatedFiles'], 1) : '',
+                "productComponents"  => !empty($product['productComponents']) ? json_encode($product['productComponents'], 1) : '',
+                "priceListPrice"  => @$product['priceListPrice'],
+                "priceListPriceWithVat"  => @$product['priceListPriceWithVat'],
+                "priceCalculationSteps"  => !empty($product['priceCalculationSteps']) ? json_encode($product['priceCalculationSteps'], 1) : '',
+                "locationInWarehouse"  => @$product['locationInWarehouse'],
+                "locationInWarehouseID"  => @$product['locationInWarehouseID'],
+                "locationInWarehouseName"  => @$product['locationInWarehouseName'],
+                "locationInWarehouseText"  => @$product['locationInWarehouseText'],
+                "reorderMultiple"  => $product['reorderMultiple'],
+                "extraField1Title"  => @$product['extraField1Title'],
+                "extraField1ID"  => @$product['extraField1ID'],
+                "extraField1Code"  => @$product['extra_field1_id'],
+                "extraField1Name"  => @$product['extraField1Name'],
+                "extraField2Title"  => @$product['extraField2Title'],
+                "extraField2ID"  => @$product['extra_field2_id'],
+                "extraField2Code"  => @$product['extraField2Code'],
+                "extraField2Name"  => @$product['extraField2Name'],
+                "extraField3Title"  => @$product['extraField3Title'],
+                "extraField3ID"  => @$product['extra_field3_id'],
+                "extraField3Code"  => @$product['extraField3Code'],
+                "extraField3Name"  => @$product['extraField3Name'],
+                "extraField4Title"  => @$product['extraField4Title'],
+                "extraField4ID"  => @$product['extra_field4_id'],
+                "extraField4Code"  => @$product['extraField4Code'],
+                "extraField4Name"  => @$product['extraField4Name'],
+                "salesPackageClearBrownGlass"  => @$product['salesPackageClearBrownGlass'],
+                "salesPackageGreenOtherGlass"  => @$product['salesPackageGreenOtherGlass'],
+                "salesPackagePlasticPpPe"  => @$product['salesPackagePlasticPpPe'],
+                "salesPackagePlasticPet"  => @$product['salesPackagePlasticPet'],
+                "salesPackageMetalFe"  => @$product['salesPackageMetalFe'],
+                "salesPackageMetalAl"  => @$product['salesPackageMetalAl'],
+                "salesPackageOtherMetal"  => @$product['salesPackageOtherMetal'],
+                "salesPackageCardboard"  => @$product['salesPackageCardboard'],
+                "salesPackageWood"  => @$product['salesPackageWood'],
+                "groupPackagePaper"  => @$product['groupPackagePaper'],
+                "groupPackagePlastic"  => @$product['groupPackagePlastic'],
+                "groupPackageMetal"  => @$product['groupPackageMetal'],
+                "groupPackageWood"  => @$product['groupPackageWood'],
+                "transportPackageWood"  => @$product['transportPackageWood'],
+                "transportPackagePlastic"  => @$product['transportPackagePlastic'],
+                "transportPackageCardboard"  => @$product['transportPackageCardboard'],
+                "registryNumber"  => $product['registryNumber'],
+                "alcoholPercentage"  => isset($product['alcoholPercentage']) ? ($product['alcoholPercentage'] == '' ? 0 : $product['alcoholPercentage']) : 0,
+                "batches"  => $product['batches'],
+                "exciseDeclaration"  => $product['exciseDeclaration'],
+                "exciseFermentedProductUnder6"  => $product['exciseFermentedProductUnder6'] == '' ? 0.0 : $product['exciseFermentedProductUnder6'],
+                "exciseWineOver6"  => @$product['exciseWineOver6'] == '' ? 0.0 : $product['exciseWineOver6'],
+                "exciseFermentedProductOver6"  => @$product['exciseFermentedProductOver6'] == '' ? 0.0 : $product['exciseFermentedProductOver6'],
+                "exciseIntermediateProduct"  => @$product['exciseIntermediateProduct'] == '' ? 0.0 : $product['exciseIntermediateProduct'],
+                "exciseOtherAlcohol"  => @$product['exciseOtherAlcohol'] == '' ? 0.0 : $product['exciseOtherAlcohol'],
+                "excisePackaging"  => @$product['excisePackaging'] == '' ? 0.0 : $product['excisePackaging'],
+                "attributes"  => !empty($product['attributes']) ? json_encode($product['attributes'], 1) : '',
+                "longAttributes"  => !empty($product['longAttributes']) ? json_encode($product['longAttributes'], 1) : '',
+                "parameters"  => !empty($product['parameters']) ? json_encode($product['parameters'], 1) : '',
+                "productReplacementHistory"  => !empty($product['productReplacementHistory']) ? json_encode($product['productReplacementHistory'], 1) : '',
+            ]
+        );
         $this->letsLog->setChronLog($old ? json_encode($old, true) : '', json_encode($change, true), $old  ? "Matrix Product Updated" : "Matrix Product Created");
     }
 
-    protected function variationSaveUpdatePIM($product){
+    protected function variationSaveUpdatePIM($product)
+    {
 
         $old = $this->variation->where('productID', $product['productID'])->first();
 
@@ -704,10 +739,10 @@ class GetProductService implements UserOperationInterface{
                 "priorityGroupID"  => @$product['priorityGroupID'],
                 "countryOfOriginID"  => @$product['countryOfOriginID'],
                 "brandID"  => @$product['brandID'],
-                "brandName"  => @$product['brandName'],//today date time
+                "brandName"  => @$product['brandName'], //today date time
                 "width"  => @$product['width'],
                 "height"  => @$product['height'],
-                "length"  => @$product['length'],// today date
+                "length"  => @$product['length'], // today date
                 "lengthInMinutes"  => @$product['lengthInMinutes'],
                 "setupTimeInMinutes"  => @$product['setupTimeInMinutes'],
                 "cleanupTimeInMinutes"  => @$product['cleanupTimeInMinutes'],
@@ -732,30 +767,30 @@ class GetProductService implements UserOperationInterface{
                 "FIFOCost"  => @$product['FIFOCost'],
                 "purchasePrice"  => @$product['purchasePrice'],
                 "backbarCharges"  => @$product['backbarCharges'],
-                "added"  => date('Y-m-d H:i:s',$product['added']),
+                "added"  => date('Y-m-d H:i:s', $product['added']),
                 "addedByUsername"  => $product['addedByUsername'],
                 "lastModified"  => date('Y-m-d H:i:s', $product['lastModified']),
                 "lastModifiedByUsername"  => $product['lastModifiedByUsername'],
-                "images"  => !empty($product['images']) ? json_encode($product['images'],1) : '',
-                "warehouses"  => !empty($product['warehouses']) ? json_encode($product['warehouses'],1) : '',
-                "variationDescription"  => !empty($product['variationDescription']) ? json_encode($product['variationDescription'],1) : '',
-                "productVariations"  => !empty($product['productVariations']) ? json_encode($product['productVariations'],1) : '',
-                "variationList"  => !empty($product['variationList']) ? json_encode($product['variationList'],1) : '',
+                "images"  => !empty($product['images']) ? json_encode($product['images'], 1) : '',
+                "warehouses"  => !empty($product['warehouses']) ? json_encode($product['warehouses'], 1) : '',
+                "variationDescription"  => !empty($product['variationDescription']) ? json_encode($product['variationDescription'], 1) : '',
+                "productVariations"  => !empty($product['productVariations']) ? json_encode($product['productVariations'], 1) : '',
+                "variationList"  => !empty($product['variationList']) ? json_encode($product['variationList'], 1) : '',
                 "parentProductID"  => @$product['parentProductID'],
                 "containerID"  => @$product['containerID'],
                 "containerName"  => @$product['containerName'],
                 "containerCode"  => @$product['containerCode'],
                 "containerAmount"  => @$product['containerAmount'],
                 "packagingType"  => $product['packagingType'],
-                "packages"  => !empty($product['packages']) ? json_encode($product['packages'],1) : '',
-                "productPackages"  => !empty($product['productPackages']) ? json_encode($product['productPackages'],1) : '',
-                "replacementProducts"  => !empty($product['replacementProducts']) ? json_encode($product['replacementProducts'],1) : '',
-                "relatedProducts"  => !empty($product['relatedProducts']) ? json_encode($product['relatedProducts'],1) : '',
-                "relatedFiles"  => !empty($product['relatedFiles']) ? json_encode($product['relatedFiles'],1) : '',
-                "productComponents"  => !empty($product['productComponents']) ? json_encode($product['productComponents'],1) : '',
+                "packages"  => !empty($product['packages']) ? json_encode($product['packages'], 1) : '',
+                "productPackages"  => !empty($product['productPackages']) ? json_encode($product['productPackages'], 1) : '',
+                "replacementProducts"  => !empty($product['replacementProducts']) ? json_encode($product['replacementProducts'], 1) : '',
+                "relatedProducts"  => !empty($product['relatedProducts']) ? json_encode($product['relatedProducts'], 1) : '',
+                "relatedFiles"  => !empty($product['relatedFiles']) ? json_encode($product['relatedFiles'], 1) : '',
+                "productComponents"  => !empty($product['productComponents']) ? json_encode($product['productComponents'], 1) : '',
                 "priceListPrice"  => @$product['priceListPrice'],
                 "priceListPriceWithVat"  => @$product['priceListPriceWithVat'],
-                "priceCalculationSteps"  => !empty($product['priceCalculationSteps']) ? json_encode($product['priceCalculationSteps'],1) : '',
+                "priceCalculationSteps"  => !empty($product['priceCalculationSteps']) ? json_encode($product['priceCalculationSteps'], 1) : '',
                 "locationInWarehouse"  => @$product['locationInWarehouse'],
                 "locationInWarehouseID"  => @$product['locationInWarehouseID'],
                 "locationInWarehouseName"  => @$product['locationInWarehouseName'],
@@ -803,24 +838,26 @@ class GetProductService implements UserOperationInterface{
                 "exciseIntermediateProduct"  => @$product['exciseIntermediateProduct'] == '' ? 0.0 : $product['exciseIntermediateProduct'],
                 "exciseOtherAlcohol"  => @$product['exciseOtherAlcohol'] == '' ? 0.0 : $product['exciseOtherAlcohol'],
                 "excisePackaging"  => @$product['excisePackaging'] == '' ? 0.0 : $product['excisePackaging'],
-                "attributes"  => !empty($product['attributes']) ? json_encode($product['attributes'],1) : '',
-                "longAttributes"  => !empty($product['longAttributes']) ? json_encode($product['longAttributes'],1) : '',
-                "parameters"  => !empty($product['parameters']) ? json_encode($product['parameters'],1) : '',
-                "productReplacementHistory"  => !empty($product['productReplacementHistory']) ? json_encode($product['productReplacementHistory'],1) : '',
+                "attributes"  => !empty($product['attributes']) ? json_encode($product['attributes'], 1) : '',
+                "longAttributes"  => !empty($product['longAttributes']) ? json_encode($product['longAttributes'], 1) : '',
+                "parameters"  => !empty($product['parameters']) ? json_encode($product['parameters'], 1) : '',
+                "productReplacementHistory"  => !empty($product['productReplacementHistory']) ? json_encode($product['productReplacementHistory'], 1) : '',
             ]
         );
         $this->letsLog->setChronLog($old ? json_encode($old, true) : '', json_encode($change, true), $old  ? "Variation Product Updated" : "Variation Product Created");
     }
 
-    public function getTempUpdateDate($id){
+    public function getTempUpdateDate($id)
+    {
         $date = TempDate::where("id", $id)->first();
-        if($date){
+        if ($date) {
             return strtotime($date->datetime);
         }
         return 0;
     }
 
-    public function getLastUpdateDate(){
+    public function getLastUpdateDate()
+    {
         // echo "im call";
         //  $latest = $this->variation->where('clientCode',  $this->api->client->clientCode)->orderBy('lastModified', 'desc')->first();
         // if($latest){
@@ -832,35 +869,37 @@ class GetProductService implements UserOperationInterface{
         //     }
         // }
         $vlatest = $this->variation->where('clientCode',  $this->api->client->clientCode)->orderBy('added', 'desc')->first();
-         $mlatest = $this->matrix->where('clientCode',  $this->api->client->clientCode)->orderBy('added', 'desc')->first();
+        $mlatest = $this->matrix->where('clientCode',  $this->api->client->clientCode)->orderBy('added', 'desc')->first();
         //  echo $vlatest->lastModified."  ".$mlatest->lastModified;
         //  die;
-        if($vlatest){
+        if ($vlatest) {
             $l = $mlatest->added > $vlatest->added ? $mlatest->added : $vlatest->added;
             // dd($l);
             return strtotime($l);
         }
-        return 0;// strtotime($latest);
+        return 0; // strtotime($latest);
     }
 
-    public function getLastUpdateDateDelete($table){
+    public function getLastUpdateDateDelete($table)
+    {
         // echo "im call";
         $latest = UserOperationLog::where('clientCode', $this->api->client->clientCode)->where('tableName', $table)->orderBy('timestamp', 'desc')->first();
-        if($latest){
+        if ($latest) {
 
             return strtotime($latest->timestamp);
         }
-        return 0;// strtotime($latest);
+        return 0; // strtotime($latest);
     }
 
-    public function deleteRecords($res, $clientCode){
+    public function deleteRecords($res, $clientCode)
+    {
 
-    //    dd("Hello im from get product service class");
-        foreach($res as $l){
-            $this->handleOperationLog($l,$clientCode,  $l['itemID']);
-            if($l['operation'] == 'delete'){
-                VariationProduct::deleteProduct($clientCode,$l["itemID"]);
-                MatrixProduct::deleteProduct($clientCode,$l["itemID"]);
+        //    dd("Hello im from get product service class");
+        foreach ($res as $l) {
+            $this->handleOperationLog($l, $clientCode,  $l['itemID']);
+            if ($l['operation'] == 'delete') {
+                VariationProduct::deleteProduct($clientCode, $l["itemID"]);
+                MatrixProduct::deleteProduct($clientCode, $l["itemID"]);
             }
         }
     }
