@@ -389,7 +389,8 @@ class GetProductService implements UserOperationInterface
         $itemLastModified     = $attr['ItemLastModified'] ?? (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
         $schoolLastModified   = $attr['SchoolLastModified'] ?? null;
         $priceLastModified    = $attr['PriceLastModified'] ?? (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
-        $pswPriceListItemCategory = $attr['PSWPRICELISTITEMCATEGORY'] ?? null;
+        $value = $attr['PSWPRICELISTITEMCATEGORY'] ?? null;
+        $pswPriceListItemCategory = ($value === '') ? null : $value;
         $category_Name        = $attr['Category_Name'] ?? null;
         $icsc                 = $attr['ICSC'] ?? null;
         $customItemName       = $attr['customItemName'] ?? null;
@@ -462,7 +463,7 @@ class GetProductService implements UserOperationInterface
                 "RetailSalesPriceExclGST" => $retailSalesPriceExclGST,
                 "RetailSalesPriceExclGST2" => $retailSalesPriceExclGST2,
                 "CostPrice"         => $costPrice,
-                "PSWPRICELISTITEMCATEGORY" => $pswPriceListItemCategory,
+                "PSWPRICELISTITEMCATEGORY" => $pswPriceListItemCategory ?? null,
 
                 // STATUS
                 "AvailableForPurchase" => $availableForPurchase,
