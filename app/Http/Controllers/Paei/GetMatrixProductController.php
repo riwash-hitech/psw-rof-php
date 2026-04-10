@@ -40,11 +40,10 @@ class GetMatrixProductController extends Controller
     public function getProduct(){
 
         info("Cron Called for Product Sync This is Old Version");
-
         $param = array(
-            "orderBy" => "added",
-            "orderByDir" => "desc",
-            "addedSince" => $this->service->getLastUpdateDate(),
+            "orderBy" => "changed",
+            "orderByDir" => "asc",
+            "changedSince" => $this->service->getLastUpdateDate(),
             "recordsOnPage" => "10",
             "includeMatrixVariations" => 1,
             "getPackagingMaterials" => 1,
@@ -61,12 +60,13 @@ class GetMatrixProductController extends Controller
             // "active" => 1,
             "sessionKey" => $this->api->client->sessionKey
          );
-
+// dd($this->service->getLastUpdateDate());
 
         //  print_r($param);
         //  die;
         $res = $this->api->sendRequest("getProducts", $param,0,0,0);
 
+        // dd($res);
          if($res['status']['errorCode'] == 0 && !empty($res['records'])){
 
             return $this->service->saveUpdate($res['records']);
@@ -99,7 +99,7 @@ class GetMatrixProductController extends Controller
         //  dd($param);
         //  die;
          $res = $this->api->sendRequest("getProducts", $param,0,0,0);
-        // dd($res);
+        dd($res);
          if($res['status']['errorCode'] == 0 && !empty($res['records'])){
             return $this->service->saveUpdateV2($res['records']);
          }

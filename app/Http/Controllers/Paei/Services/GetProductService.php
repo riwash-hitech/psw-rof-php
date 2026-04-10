@@ -141,7 +141,7 @@ class GetProductService implements UserOperationInterface
     protected function matrixSaveUpdate(array $product, int $clientCode)
     {
         // Determine ERPLY flag
-        $erplyFlag = ($clientCode == 607655) ? '' : 'PSW';
+        $erplyFlag = ($clientCode == 607655) ? null : 'PSW';
 
         // Old record for logging
         $old = $this->liveProductMatrix
@@ -300,7 +300,7 @@ class GetProductService implements UserOperationInterface
         ];
 
         // dd($fields);
-
+// dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
         // Update or create
         $change = $this->liveProductMatrix->updateOrCreate(
             ['ERPLYFLAG' => $erplyFlag, 'erplyID' => $itemId],
@@ -868,12 +868,14 @@ class GetProductService implements UserOperationInterface
         //         return strtotime($latest->lastModified);
         //     }
         // }
-        $vlatest = $this->variation->where('clientCode',  $this->api->client->clientCode)->orderBy('added', 'desc')->first();
-        $mlatest = $this->matrix->where('clientCode',  $this->api->client->clientCode)->orderBy('added', 'desc')->first();
+
+        $erplyFlag = ($this->api->client->clientCode == 607655) ? '' : 'PSW';
+        $vlatest = $this->variationLive->where('ERPLYFLAG', $erplyFlag)->orderBy('ItemLastModified', 'desc')->first();
+        $mlatest = $this->liveProductMatrix->where('ERPLYFLAG', $erplyFlag)->orderBy('ItemLastModified', 'desc')->first();
         //  echo $vlatest->lastModified."  ".$mlatest->lastModified;
         //  die;
         if ($vlatest) {
-            $l = $mlatest->added > $vlatest->added ? $mlatest->added : $vlatest->added;
+            $l = $mlatest->ItemLastModified > $vlatest->ItemLastModified ? $mlatest->ItemLastModified : $vlatest->ItemLastModified;
             // dd($l);
             return strtotime($l);
         }
