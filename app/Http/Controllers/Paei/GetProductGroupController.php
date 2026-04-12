@@ -28,12 +28,12 @@ class GetProductGroupController extends Controller
         // echo "hello sir";
         // die;
         $param = array(
-            "orderBy" => "changed",
+            "orderBy" => "added",
             "orderByDir" => "asc",
-            "recordsOnPage" => "200",
+            "recordsOnPage" => "1000",
             "active" => 1,
             // "pageNo" => $this->page,
-            "changedSince" => $this->service->getLastUpdateDate(), 
+            "changedSince" => $this->service->getLastUpdateDate(),
          );
         //  print_r($param);
         //  die;
@@ -77,13 +77,13 @@ class GetProductGroupController extends Controller
     }
 
     public function getOperationLog(){
-         
+
         $param = array(
             "orderBy" => "added",
             "orderByDir" => "asc",
             "recordsOnPage" => "200",
-            "tableName" => "productGroups", 
-            "addedFrom" => $this->getLastUpdateDateDelete("productGroups"), 
+            "tableName" => "productGroups",
+            "addedFrom" => $this->getLastUpdateDateDelete("productGroups"),
         );
         // dd($this->api->client);
          $res = $this->api->sendRequest("getUserOperationsLog", $param);
@@ -96,7 +96,7 @@ class GetProductGroupController extends Controller
             }
 
             $this->userOperationInterface->deleteRecords($res['records'], $this->api->client->clientCode);
-           
+
          }
          info("productGroups Operation Log Fetched Successfully.");
          return response()->json(["status" => 200, "message" => "productGroups Operation Log Fetched Successfully."]);
