@@ -207,6 +207,8 @@ class GetProductService implements UserOperationInterface
         $gender               = $this->nullIfEmpty($attr['Gender'] ?? null);
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
+
+        dd($attr);
         $defaultStore         = $defaultStore = $this->nullIfEmpty(
             json_decode($attr['DefaultStore'] ?? '', true)['location'] ?? null
         );
