@@ -179,7 +179,7 @@ class GetProductService implements UserOperationInterface
         }
 
         // Assign all values safely
-        $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? ($school ? $school->id : null));
+        $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
         $schoolName           = $this->nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
         $customerGroup        = $this->nullIfEmpty($attr['CustomerGroup'] ?? null);
         $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
