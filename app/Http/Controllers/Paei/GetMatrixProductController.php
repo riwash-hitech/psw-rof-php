@@ -44,7 +44,7 @@ class GetMatrixProductController extends Controller
             "orderBy" => "changed",
             "orderByDir" => "asc",
             "changedSince" => $this->service->getLastUpdateDate(),
-            "recordsOnPage" => "10",
+            "recordsOnPage" => "100",
             "includeMatrixVariations" => 1,
             "getPackagingMaterials" => 1,
             "getRecipes" => 1,
@@ -60,7 +60,7 @@ class GetMatrixProductController extends Controller
             // "active" => 1,
             "sessionKey" => $this->api->client->sessionKey
          );
-// dd($this->service->getLastUpdateDate());
+dd($this->service->getLastUpdateDate());
 
         //  print_r($param);
         //  die;
