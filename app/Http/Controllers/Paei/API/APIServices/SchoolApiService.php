@@ -480,7 +480,7 @@ class SchoolApiService
                 }
             }
         });
-
+        $query->get();
         dd(\DB::getQueryLog());
 
 
