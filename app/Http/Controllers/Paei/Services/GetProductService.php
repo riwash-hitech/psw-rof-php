@@ -272,7 +272,7 @@ class GetProductService implements UserOperationInterface
             'SchoolName' => $schoolName,
             'CustomerGroup' => $customerGroup,
             'ERPLYSKU' => $erplySKU,
-            'WEBSKU' => $webSKU,
+            'WEBSKU' => $itemId,
             'ITEMID' => $itemId,
             'ItemName' => $itemName,
             'ColourID' => $colourId,
@@ -506,7 +506,7 @@ class GetProductService implements UserOperationInterface
                 // BASIC
                 "ItemName"          => trim($itemName),
                 "ERPLYSKU"          => $erplySKU,
-                "WEBSKU"            => $webSKU,
+                "WEBSKU"            => $product['parentProductID'] ?? null,
                 "ITEMID"            => $itemId,
                 "schoolID"          => $schoolId,
                 "schoolName"        => $schoolName,
