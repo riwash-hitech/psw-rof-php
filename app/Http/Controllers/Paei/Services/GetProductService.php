@@ -6,7 +6,7 @@ use App\Classes\UserLogger;
 use App\Contracts\UserOperationInterface;
 use App\Http\Controllers\Services\EAPIService;
 use App\Models\PAEI\{MatrixProduct, ProductGroup, Supplier, TempDate, UserOperationLog, VariationProduct, Warehouse};
-use App\Models\PswClientLive\Local\{LiveProductMatrix, LiveProductVariation};
+use App\Models\PswClientLive\Local\{LiveItemByLocation, LiveProductMatrix, LiveProductVariation};
 use App\Traits\UserOperationTrait;
 
 class GetProductService implements UserOperationInterface
@@ -414,12 +414,39 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
 
-        $defaultStore         = $defaultStore = $this->nullIfEmpty(
-            json_decode($attr['DefaultStore'] ?? '', true)['location'] ?? null
-        );
-        $secondaryStore       = $defaultStore = $this->nullIfEmpty(
-            json_decode($attr['SecondaryStore'] ?? '', true)['location'] ?? null
-        );
+        $decodeStoreLocation = function ($json) {
+            $data = json_decode($json ?? '', true);
+            return $this->nullIfEmpty($data[0]['location'] ?? null);
+        };
+
+        $sumSOH = function ($json) {
+            $total = 0;
+
+            $data = json_decode($json ?? '', true);
+
+            if (is_array($data)) {
+                foreach ($data as $row) {
+                    $total += (float) ($row['SOH'] ?? 0);
+                }
+            }
+
+            return $this->nullIfEmpty($total);
+        };
+
+        // Default Store
+        $defaultStore = $decodeStoreLocation($attr['DefaultStore'] ?? null);
+
+        // Secondary Store
+        $secondaryStore = $decodeStoreLocation($attr['SecondaryStore'] ?? null);
+
+        // SOH (Default)
+        $sohDefault = $sumSOH($attr['DefaultStore'] ?? null);
+
+        // SOH (Secondary)
+        $sohSecondary = $sumSOH($attr['SecondaryStore'] ?? null);
+
+
+
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $sofLastModified      = !empty($attr['SOFLastModified'])
             ? date('Y-m-d H:i:s', strtotime($attr['SOFLastModified']))
@@ -465,6 +492,8 @@ class GetProductService implements UserOperationInterface
         $assortmentPending    = $attr['assortmentPending'] ?? 1;
         $assortmentRemovePending = $attr['assortmentRemovePending'] ?? 1;
         $imagePending         = $attr['imagePending'] ?? 1;
+
+
 
         // ✅ OLD RECORD
         $old = $this->variationLive
@@ -593,6 +622,31 @@ class GetProductService implements UserOperationInterface
 
             ]
         );
+
+        $sohDefData = [
+            'icsc' => $icsc,
+            'AvailablePhysical' => $sohDefault,
+            'warehouse' => $defaultStore,
+            'itemID' => $itemId
+        ];
+
+        $sohSecData = [
+            'icsc' => $icsc,
+            'AvailablePhysical' => $sohSecondary,
+            'warehouse' => $secondaryStore,
+            'itemID' => $itemId
+        ];
+
+        $soh = LiveItemByLocation::updateOrCreate(
+            ['icsc' => $icsc, 'warehouse' => $defaultStore],
+            $sohDefData
+        );
+
+        $soh = LiveItemByLocation::updateOrCreate(
+            ['icsc' => $icsc, 'warehouse' => $secondaryStore],
+            $sohSecData
+        );
+
 
         // ✅ LOG
         $this->letsLog->setChronLog(
