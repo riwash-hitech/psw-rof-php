@@ -326,7 +326,7 @@ class GetProductService implements UserOperationInterface
             'variationPending' => $variationPending,
             'checkErply' => $checkErply,
             'erplyDeleted' => $erplyDeleted,
-            'erplyAttributes' => $attributes ?? [],
+            'erplyAttributes' => json_encode($attributes ?? []),
             'erplyStatus' => $status
         ];
 
