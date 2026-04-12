@@ -330,7 +330,6 @@ class GetProductService implements UserOperationInterface
             'erplyStatus' => $status
         ];
 
-        dd($fields);
 // dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
         // Update or create
         $change = $this->liveProductMatrix->updateOrCreate(
