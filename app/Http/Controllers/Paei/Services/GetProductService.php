@@ -179,51 +179,59 @@ class GetProductService implements UserOperationInterface
         }
 
         // Assign all values safely
-        $schoolId             = $attr['SchoolID'] ?? null;
-        $schoolName           = $attr['SchoolName'] ?? ($school ? $school->name : null);
-        $customerGroup        = $attr['CustomerGroup'] ?? null;
-        $erplySKU             = $attr['ERPLYSKU'] ?? $product['code'] ?? null;
-        $webSKU               = $attr['WEBSKU'] ?? $erplySKU ?? null;
-        $itemId               = $attr['ITEMID'] ?? $product['productID'] ?? null;
-        $itemName             = $attr['Matrix_Product_Name'] ?? $product['name'] ?? null;
-        $colourId             = $attr['ColourID'] ?? null;
-        $colourName           = $attr['ColourName'] ?? null;
-        $sizeId               = $attr['SizeID'] ?? null;
-        $configId             = $attr['CONFIGID'] ?? null;
-        $configName           = $attr['ConfigName'] ?? null;
-        $eanBarcode           = $attr['EANBarcode'] ?? null;
-        $sofTemplate          = $attr['SOFTemplate'] ?? null;
-        $sofName              = $attr['SOFName'] ?? null;
-        $sofOrder             = $attr['SOFOrder'] ?? null;
-        $sofStatus            = $attr['SOFStatus'] ?? null;
-        $plmStatus            = $attr['PLMStatus'] ?? null;
-        $productType          = $attr['ProductType'] ?? null;
-        $productSubType       = $attr['ProductSubType'] ?? null;
-        $supplier             = $attr['Supplier'] ?? @$product['supplierName'];
-        $gender               = $attr['Gender'] ?? null;
-        $categoryName         = $attr['CategoryName'] ?? null;
-        $itemWeightGrams      = $attr['ItemWeightGrams'] ?? null;
-        $retailSalesPrice     = $attr['RetailSalesPrice'] ?? 0;
-        $retailSalesPrice2    = $attr['RetailSalesPrice2'] ?? 0;
-        $retailSalesPriceExclGST  = $attr['RetailSalesPriceExclGST'] ?? 0;
-        $retailSalesPriceExclGST2 = $attr['RetailSalesPriceExclGST2'] ?? 0;
-        $costPrice            = $attr['CostPrice'] ?? 0;
-        $defaultStore         = $attr['DefaultStore'] ?? null;
-        $secondaryStore       = $attr['SecondaryStore'] ?? null;
-        $erplyFlagModified    = $attr['ERPLYFLAGModified'] ?? null;
-        $category_Name        = $attr['Category_Name'] ?? null;
-        $pswPriceListItemCategory = $attr['PSWPRICELISTITEMCATEGORY'] ?? null;
-        $itemLastModified     = isset($attr['ItemLastModified']) ? date('Y-m-d H:i:s', strtotime($attr['ItemLastModified'])) : null;
-        $sofLastModified      = isset($attr['SOFLastModified']) ? date('Y-m-d H:i:s', strtotime($attr['SOFLastModified'])) : null;
-        $schoolLastModified   = isset($attr['SchoolLastModified']) ? date('Y-m-d H:i:s', strtotime($attr['SchoolLastModified'])) : null;
-        $priceLastModified    = isset($attr['PriceLastModified']) ? date('Y-m-d H:i:s', strtotime($attr['PriceLastModified'])) : null;
+        $schoolId             = nullIfEmpty($attr['SchoolID'] ?? null);
+        $schoolName           = nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
+        $customerGroup        = nullIfEmpty($attr['CustomerGroup'] ?? null);
+        $erplySKU             = nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
+        $webSKU               = nullIfEmpty($attr['WEBSKU'] ?? $erplySKU);
+        $itemId               = nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
+        $itemName             = nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
+        $colourId             = nullIfEmpty($attr['ColourID'] ?? null);
+        $colourName           = nullIfEmpty($attr['ColourName'] ?? null);
+        $sizeId               = nullIfEmpty($attr['SizeID'] ?? null);
+        $configId             = nullIfEmpty($attr['CONFIGID'] ?? null);
+        $configName           = nullIfEmpty($attr['ConfigName'] ?? null);
+        $eanBarcode           = nullIfEmpty($attr['EANBarcode'] ?? null);
+        $sofTemplate          = nullIfEmpty($attr['SOFTemplate'] ?? null);
+        $sofName              = nullIfEmpty($attr['SOFName'] ?? null);
+        $sofOrder             = nullIfEmpty($attr['SOFOrder'] ?? null);
+        $sofStatus            = nullIfEmpty($attr['SOFStatus'] ?? null);
+        $plmStatus            = nullIfEmpty($attr['PLMStatus'] ?? null);
+        $productType          = nullIfEmpty($attr['ProductType'] ?? null);
+        $productSubType       = nullIfEmpty($attr['ProductSubType'] ?? null);
+        $supplier             = nullIfEmpty($attr['Supplier'] ?? ($product['supplierName'] ?? null));
+        $gender               = nullIfEmpty($attr['Gender'] ?? null);
+        $categoryName         = nullIfEmpty($attr['CategoryName'] ?? null);
+        $itemWeightGrams      = nullIfEmpty($attr['ItemWeightGrams'] ?? null);
+        $defaultStore         = nullIfEmpty($attr['DefaultStore'] ?? null);
+        $secondaryStore       = nullIfEmpty($attr['SecondaryStore'] ?? null);
+        $erplyFlagModified    = nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
+        $category_Name        = nullIfEmpty($attr['Category_Name'] ?? null);
+        $pswPriceListItemCategory = nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
+
+        $itemLastModified     = !empty($attr['ItemLastModified'])
+            ? date('Y-m-d H:i:s', strtotime($attr['ItemLastModified']))
+            : null;
+
+        $sofLastModified      = !empty($attr['SOFLastModified'])
+            ? date('Y-m-d H:i:s', strtotime($attr['SOFLastModified']))
+            : null;
+
+        $schoolLastModified   = !empty($attr['SchoolLastModified'])
+            ? date('Y-m-d H:i:s', strtotime($attr['SchoolLastModified']))
+            : null;
+
+        $priceLastModified    = !empty($attr['PriceLastModified'])
+            ? date('Y-m-d H:i:s', strtotime($attr['PriceLastModified']))
+            : null;
+
         $availableForPurchase = $attr['AvailableForPurchase'] ?? 1;
-        $customItemName       = $attr['customItemName'] ?? null;
-        $receiptDescription   = $attr['receiptDescription'] ?? null;
+        $customItemName       = nullIfEmpty($attr['customItemName'] ?? null);
+        $receiptDescription   = nullIfEmpty($attr['receiptDescription'] ?? null);
         $barcodeDuplicate     = $attr['barcodeDuplicate'] ?? 0;
         $colorFlag            = $attr['colorFlag'] ?? 0;
         $genericProduct       = $attr['genericProduct'] ?? 0;
-        $erplyError           = $attr['erplyError'] ?? null;
+        $erplyError           = nullIfEmpty($attr['erplyError'] ?? null);
         $vUpdate              = $attr['vUpdate'] ?? 1;
         $mUpdate              = $attr['mUpdate'] ?? 1;
         $pushCount            = $attr['pushCount'] ?? 0;
@@ -231,10 +239,16 @@ class GetProductService implements UserOperationInterface
         $assortmentPending    = $attr['assortmentPending'] ?? 1;
         $assortmentRemovePending = $attr['assortmentRemovePending'] ?? 1;
         $imagePending         = $attr['imagePending'] ?? 1;
-        $imageUrl             = $attr['imageUrl'] ?? null;
+        $imageUrl             = nullIfEmpty($attr['imageUrl'] ?? null);
         $variationPending     = $attr['variationPending'] ?? 1;
         $checkErply           = $attr['checkErply'] ?? 1;
 
+        /* Numeric fields (keep 0 default, don't convert to null) */
+        $retailSalesPrice         = $attr['RetailSalesPrice'] ?? 0;
+        $retailSalesPrice2        = $attr['RetailSalesPrice2'] ?? 0;
+        $retailSalesPriceExclGST  = $attr['RetailSalesPriceExclGST'] ?? 0;
+        $retailSalesPriceExclGST2 = $attr['RetailSalesPriceExclGST2'] ?? 0;
+        $costPrice                = $attr['CostPrice'] ?? 0;
         $fields = [
             'erplyID' => $itemId,
             'type' => $product['type'] ?? 'MATRIX',
@@ -352,49 +366,66 @@ class GetProductService implements UserOperationInterface
         }
 
         // ✅ ALL VARIABLES WITH SAFE FALLBACKS
-        $schoolId             = $attr['SchoolID'] ?? ($product['groupID'] ?? null);
-        $schoolName           = $attr['SchoolName'] ?? ($school ? $school->name : null);
-        $customerGroup        = $attr['CustomerGroup'] ?? null;
-        $erplySKU             = $attr['ERPLYSKU'] ?? $product['code'] ?? null;
-        $webSKU               = $attr['WEBSKU'] ?? $product['code2'] ?? null;
-        $itemId               = $attr['ITEMID'] ?? $product['productID'] ?? null;
-        $itemName             = $attr['Matrix_Product_Name'] ?? $product['name'] ?? null;
-        $colourId             = $attr['ColourID'] ?? null;
-        $colourName           = $attr['ColourName'] ?? null;
-        $sizeId               = $attr['SizeID'] ?? null;
-        $configId             = $attr['CONFIGID'] ?? null;
-        $configName           = $attr['ConfigName'] ?? null;
-        $eanBarcode           = $attr['EANBarcode'] ?? $product['code'] ?? null;
-        $sofTemplate          = $attr['SOFTemplate'] ?? null;
-        $sofName              = $attr['SOFName'] ?? null;
-        $sofOrder             = $attr['SOFOrder'] ?? null;
-        $sofStatus            = $attr['SOFStatus'] ?? null;
-        $plmStatus            = $attr['PLMStatus'] ?? null;
-        $productType          = $attr['ProductType'] ?? $product['type'] ?? null;
-        $productSubType       = $attr['ProductSubType'] ?? $product['seriesName'] ?? null;
-        $supplier             = $attr['Supplier'] ?? $product['supplierName'] ?? null;
-        $gender               = $attr['Gender'] ?? null;
-        $categoryName         = $attr['CategoryName'] ?? $product['categoryName'] ?? null;
-        $itemWeightGrams      = $attr['ItemWeightGrams'] ?? $product['netWeight'] ?? 0;
-        $retailSalesPrice     = $attr['RetailSalesPrice'] ?? $product['price'] ?? 0;
-        $retailSalesPrice2    = $attr['RetailSalesPrice2'] ?? $product['priceWithVat'] ?? 0;
+        $schoolId             = nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
+        $schoolName           = nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
+        $customerGroup        = nullIfEmpty($attr['CustomerGroup'] ?? null);
+        $erplySKU             = nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
+        $webSKU               = nullIfEmpty($attr['WEBSKU'] ?? ($product['code2'] ?? null));
+        $itemId               = nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
+        $itemName             = nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
+        $colourId             = nullIfEmpty($attr['ColourID'] ?? null);
+        $colourName           = nullIfEmpty($attr['ColourName'] ?? null);
+        $sizeId               = nullIfEmpty($attr['SizeID'] ?? null);
+        $configId             = nullIfEmpty($attr['CONFIGID'] ?? null);
+        $configName           = nullIfEmpty($attr['ConfigName'] ?? null);
+        $eanBarcode           = nullIfEmpty($attr['EANBarcode'] ?? ($product['code'] ?? null));
+        $sofTemplate          = nullIfEmpty($attr['SOFTemplate'] ?? null);
+        $sofName              = nullIfEmpty($attr['SOFName'] ?? null);
+        $sofOrder             = nullIfEmpty($attr['SOFOrder'] ?? null);
+        $sofStatus            = nullIfEmpty($attr['SOFStatus'] ?? null);
+        $plmStatus            = nullIfEmpty($attr['PLMStatus'] ?? null);
+        $productType          = nullIfEmpty($attr['ProductType'] ?? ($product['type'] ?? null));
+        $productSubType       = nullIfEmpty($attr['ProductSubType'] ?? ($product['seriesName'] ?? null));
+        $supplier             = nullIfEmpty($attr['Supplier'] ?? ($product['supplierName'] ?? null));
+        $gender               = nullIfEmpty($attr['Gender'] ?? null);
+        $categoryName         = nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
+        $itemWeightGrams      = nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
+
+        $defaultStore         = nullIfEmpty($attr['DefaultStore'] ?? null);
+        $secondaryStore       = nullIfEmpty($attr['SecondaryStore'] ?? null);
+        $erplyFlagModified    = nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
+        $sofLastModified      = !empty($attr['SOFLastModified'])
+            ? date('Y-m-d H:i:s', strtotime($attr['SOFLastModified']))
+            : null;
+
+        $availableForPurchase = $attr['AvailableForPurchase'] ?? ($product['active'] ?? 0);
+
+        $itemLastModified     = !empty($attr['ItemLastModified'])
+            ? date('Y-m-d H:i:s', strtotime($attr['ItemLastModified']))
+            : (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
+
+        $schoolLastModified   = !empty($attr['SchoolLastModified'])
+            ? date('Y-m-d H:i:s', strtotime($attr['SchoolLastModified']))
+            : null;
+
+        $priceLastModified    = !empty($attr['PriceLastModified'])
+            ? date('Y-m-d H:i:s', strtotime($attr['PriceLastModified']))
+            : (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
+
+        $pswPriceListItemCategory = nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
+        $category_Name        = nullIfEmpty($attr['Category_Name'] ?? null);
+        $icsc                 = nullIfEmpty($attr['ICSC'] ?? null);
+        $customItemName       = nullIfEmpty($attr['customItemName'] ?? null);
+        $receiptDescription   = nullIfEmpty($attr['receiptDescription'] ?? null);
+        $erplyError           = nullIfEmpty($attr['erplyError'] ?? null);
+
+        /* Numeric / flags (keep defaults) */
+        $retailSalesPrice         = $attr['RetailSalesPrice'] ?? ($product['price'] ?? 0);
+        $retailSalesPrice2        = $attr['RetailSalesPrice2'] ?? ($product['priceWithVat'] ?? 0);
         $retailSalesPriceExclGST  = $attr['RetailSalesPriceExclGST'] ?? 0;
         $retailSalesPriceExclGST2 = $attr['RetailSalesPriceExclGST2'] ?? 0;
-        $costPrice            = $attr['CostPrice'] ?? $product['cost'] ?? 0;
-        $defaultStore         = $attr['DefaultStore'] ?? null;
-        $secondaryStore       = $attr['SecondaryStore'] ?? null;
-        $erplyFlagModified    = $attr['ERPLYFLAGModified'] ?? null;
-        $sofLastModified      = $attr['SOFLastModified'] ?? null;
-        $availableForPurchase = $attr['AvailableForPurchase'] ?? ($product['active'] ?? 0);
-        $itemLastModified     = $attr['ItemLastModified'] ?? (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
-        $schoolLastModified   = $attr['SchoolLastModified'] ?? null;
-        $priceLastModified    = $attr['PriceLastModified'] ?? (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
-        $value = $attr['PSWPRICELISTITEMCATEGORY'] ?? null;
-        $pswPriceListItemCategory = ($value === '') ? null : $value;
-        $category_Name        = $attr['Category_Name'] ?? null;
-        $icsc                 = $attr['ICSC'] ?? null;
-        $customItemName       = $attr['customItemName'] ?? null;
-        $receiptDescription   = $attr['receiptDescription'] ?? null;
+        $costPrice                = $attr['CostPrice'] ?? ($product['cost'] ?? 0);
+
         $barcodeDuplicate     = $attr['barcodeDuplicate'] ?? 0;
         $colorFlag            = $attr['colorFlag'] ?? 0;
         $vUpdate              = $attr['vUpdate'] ?? 1;
@@ -402,7 +433,6 @@ class GetProductService implements UserOperationInterface
         $stockPending         = $attr['stockPending'] ?? 1;
         $genericProduct       = $attr['genericProduct'] ?? 0;
         $checkErply           = $attr['checkErply'] ?? 1;
-        $erplyError           = $attr['erplyError'] ?? null;
         $assortmentPending    = $attr['assortmentPending'] ?? 1;
         $assortmentRemovePending = $attr['assortmentRemovePending'] ?? 1;
         $imagePending         = $attr['imagePending'] ?? 1;
