@@ -908,12 +908,12 @@ class GetProductService implements UserOperationInterface
         // }
 
         $erplyFlag = ($this->api->client->clientCode == 607655) ? '' : 'PSW';
-        $vlatest = $this->variationLive->where('ERPLYFLAG', $erplyFlag)->orderBy('added', 'desc')->first();
-        $mlatest = $this->liveProductMatrix->where('ERPLYFLAG', $erplyFlag)->orderBy('added', 'desc')->first();
+        $vlatest = $this->variationLive->where('ERPLYFLAG', $erplyFlag)->orderBy('productAdded', 'desc')->first();
+        $mlatest = $this->liveProductMatrix->where('ERPLYFLAG', $erplyFlag)->orderBy('productAdded', 'desc')->first();
         //  echo $vlatest->lastModified."  ".$mlatest->lastModified;
         //  die;
         if ($vlatest) {
-            $l = $mlatest->added > $vlatest->added ? $mlatest->added : $vlatest->added;
+            $l = $mlatest->productAdded > $vlatest->productAdded ? $mlatest->productAdded : $vlatest->productAdded;
             return strtotime($l);
         }
         return 0; // strtotime($latest);
