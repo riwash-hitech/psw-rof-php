@@ -429,8 +429,6 @@ class SchoolApiService
             $currentSOF = $req->sofTemplate;
         }
 
-
-
         $query = $this->school
             // ->join("newstystem_store_location_live", "newstystem_store_location_live.LocationID", "newsystem_product_matrix_live.DefaultStore")
             // ->where("newstystem_store_location_live.erplyID", $req->posID)
@@ -481,6 +479,7 @@ class SchoolApiService
             }
         });
 
+        dump($query->get());
 
 
 
