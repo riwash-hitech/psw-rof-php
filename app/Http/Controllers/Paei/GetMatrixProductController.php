@@ -68,7 +68,7 @@ class GetMatrixProductController extends Controller
         //  die;
         $res = $this->api->sendRequest("getProducts", $param,0,0,0);
 dump($res,$param);
-        dd($res);
+        // dd($res);
          if($res['status']['errorCode'] == 0 && !empty($res['records'])){
 
             return $this->service->saveUpdate($res['records']);
