@@ -390,6 +390,7 @@ class SchoolApiService
     public function getAllMatrixV5($req)
     {
 
+        \DB::enableQueryLog();
         $debug = $req->debug ?? 0;
         $version = $req->version ? $req->version : '';
 
@@ -480,7 +481,7 @@ class SchoolApiService
             }
         });
 
-        dd($query->toSql(), $query->getBindings());
+        dd(\DB::getQueryLog());
 
 
 
