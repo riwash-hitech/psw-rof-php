@@ -208,16 +208,16 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
 
-        $defaultStoreRaw = $attr['DefaultStore'] ?? null;
-        $secondaryStoreRaw = $attr['SecondaryStore'] ?? null;
+        $decodeStoreLocation = function ($json) {
+            $data = json_decode($json ?? '', true);
+            return $this->nullIfEmpty($data[0]['location'] ?? null);
+        };
 
-        $defaultStore = $this->nullIfEmpty(
-            json_decode($defaultStoreRaw, true)['location'] ?? null
-        );
+        // Default Store
+        $defaultStore = $decodeStoreLocation($attr['DefaultStore'] ?? null);
 
-        $secondaryStore = $this->nullIfEmpty(
-            json_decode($secondaryStoreRaw, true)['location'] ?? null
-        );
+        // Secondary Store
+        $secondaryStore = $decodeStoreLocation($attr['SecondaryStore'] ?? null);
 
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $pswPriceListItemCategory = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[0] ?? null));
