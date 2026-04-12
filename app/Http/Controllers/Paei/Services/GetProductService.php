@@ -490,7 +490,6 @@ class GetProductService implements UserOperationInterface
             isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : '',
         ]);
 
-        dd($status);
 
         // ✅ UPDATE OR CREATE ALL COLUMNS
         $change = $this->variationLive->updateOrCreate(
@@ -587,8 +586,8 @@ class GetProductService implements UserOperationInterface
 
                 // RAW DATA
                 "compareField"         => $compareField,
-                "erplyAttributes" => $attributes ?? [],
-                "erplyStatus" => $status
+                "erplyAttributes" => json_encode($attributes ?? []),
+                "erplyStatus" => $status ?? null,
 
             ]
         );
