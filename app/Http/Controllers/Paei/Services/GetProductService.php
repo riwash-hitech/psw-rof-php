@@ -877,7 +877,7 @@ class GetProductService implements UserOperationInterface
         //  die;
         if ($vlatest) {
             $l = $mlatest->ItemLastModified > $vlatest->ItemLastModified ? $mlatest->ItemLastModified : $vlatest->ItemLastModified;
-            dd($l);
+            // dd($l);
             return strtotime($l);
         }
         return 0; // strtotime($latest);
