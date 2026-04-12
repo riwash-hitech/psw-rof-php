@@ -252,6 +252,7 @@ class GetProductService implements UserOperationInterface
         $fields = [
             'erplyID' => $itemId,
             'type' => $product['type'] ?? 'MATRIX',
+            'productAdded' => date('Y-m-d H:i:s', $product['added']),
             'SchoolID' => $schoolId,
             'SchoolName' => $schoolName,
             'CustomerGroup' => $customerGroup,
@@ -499,6 +500,7 @@ class GetProductService implements UserOperationInterface
                 "RetailSalesPriceExclGST2" => $retailSalesPriceExclGST2,
                 "CostPrice"         => $costPrice,
                 "PSWPRICELISTITEMCATEGORY" => $pswPriceListItemCategory ?? null,
+                'productAdded' => date('Y-m-d H:i:s', $product['added']),
 
                 // STATUS
                 "AvailableForPurchase" => $availableForPurchase,
@@ -906,12 +908,12 @@ class GetProductService implements UserOperationInterface
         // }
 
         $erplyFlag = ($this->api->client->clientCode == 607655) ? '' : 'PSW';
-        $vlatest = $this->variationLive->where('ERPLYFLAG', $erplyFlag)->orderBy('ItemLastModified', 'desc')->first();
-        $mlatest = $this->liveProductMatrix->where('ERPLYFLAG', $erplyFlag)->orderBy('ItemLastModified', 'desc')->first();
+        $vlatest = $this->variationLive->where('ERPLYFLAG', $erplyFlag)->orderBy('added', 'desc')->first();
+        $mlatest = $this->liveProductMatrix->where('ERPLYFLAG', $erplyFlag)->orderBy('added', 'desc')->first();
         //  echo $vlatest->lastModified."  ".$mlatest->lastModified;
         //  die;
         if ($vlatest) {
-            $l = $mlatest->ItemLastModified > $vlatest->ItemLastModified ? $mlatest->ItemLastModified : $vlatest->ItemLastModified;
+            $l = $mlatest->added > $vlatest->added ? $mlatest->added : $vlatest->added;
             return strtotime($l);
         }
         return 0; // strtotime($latest);
