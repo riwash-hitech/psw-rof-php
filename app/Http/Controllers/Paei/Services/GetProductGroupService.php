@@ -101,7 +101,7 @@ class GetProductGroupService implements UserOperationInterface{
         // echo "im call";
          $latest = $this->group->where('clientCode',$this->api->client->clientCode )->orderBy('added', 'desc')->first();
         if($latest){
-            return strtotime($latest->changed);
+            return strtotime($latest->added);
         }
         return 0;// strtotime($latest);
     }
