@@ -28,12 +28,12 @@ class GetProductGroupController extends Controller
         // echo "hello sir";
         // die;
         $param = array(
-            "orderBy" => "added",
+            // "orderBy" => "added",
             "orderByDir" => "asc",
             "recordsOnPage" => "1000",
-            "active" => 1,
+            // "active" => 1,
             // "pageNo" => $this->page,
-            "changedSince" => $this->service->getLastUpdateDate(),
+            // "changedSince" => $this->service->getLastUpdateDate(),
          );
         //  print_r($param);
         //  die;
