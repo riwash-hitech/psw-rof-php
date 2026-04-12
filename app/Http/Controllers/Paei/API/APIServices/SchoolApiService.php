@@ -429,6 +429,8 @@ class SchoolApiService
             $currentSOF = $req->sofTemplate;
         }
 
+
+
         $query = $this->school
             // ->join("newstystem_store_location_live", "newstystem_store_location_live.LocationID", "newsystem_product_matrix_live.DefaultStore")
             // ->where("newstystem_store_location_live.erplyID", $req->posID)
@@ -467,7 +469,6 @@ class SchoolApiService
         if ($req->has('schoolID')) {
             $query->where("newsystem_product_matrix_live.SchoolID", $req->schoolID);
         }
-
         $query->where(function ($q) use ($requestData, $req) {
             foreach ($requestData as $keys => $value) {
                 if ($value != null) {
@@ -479,14 +480,6 @@ class SchoolApiService
                 }
             }
         });
-
-        $sql = vsprintf(
-            str_replace('?', "'%s'", $query->toSql()),
-            $query->getBindings()
-        );
-
-        dd($sql);
-
 
 
 
