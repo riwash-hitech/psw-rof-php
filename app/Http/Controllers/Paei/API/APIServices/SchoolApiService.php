@@ -390,7 +390,6 @@ class SchoolApiService
     public function getAllMatrixV5($req)
     {
 
-        \DB::enableQueryLog();
         $debug = $req->debug ?? 0;
         $version = $req->version ? $req->version : '';
 
@@ -429,6 +428,7 @@ class SchoolApiService
         if (isset($req->sofTemplate) == 1) {
             $currentSOF = $req->sofTemplate;
         }
+        \DB::enableQueryLog();
 
         $query = $this->school
             // ->join("newstystem_store_location_live", "newstystem_store_location_live.LocationID", "newsystem_product_matrix_live.DefaultStore")
