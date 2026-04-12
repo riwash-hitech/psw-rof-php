@@ -47,6 +47,7 @@ class GetMatrixProductController extends Controller
             "recordsOnPage" => "1000",
             "includeMatrixVariations" => 1,
             "getPackagingMaterials" => 1,
+            'status' => 'active',
             "getRecipes" => 1,
             "getRelatedFiles" => 1,
             "getRelatedProducts" => 1,
