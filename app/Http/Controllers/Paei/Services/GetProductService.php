@@ -178,7 +178,8 @@ class GetProductService implements UserOperationInterface
             $webEnabled = 1;
             $erplyEnabled = 1;
         } elseif ($status === 'archived') {
-            $erplyDeleted = 1;
+            // $erplyDeleted = 1;
+            $webEnabled = 0;
         }
 
         // Assign all values safely
