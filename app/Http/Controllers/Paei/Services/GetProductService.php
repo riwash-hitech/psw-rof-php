@@ -329,6 +329,7 @@ class GetProductService implements UserOperationInterface
             'erplyAttributes' => json_encode($attributes ?? []),
             'erplyStatus' => $status
         ];
+        dd($status);
 
 // dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
         // Update or create
