@@ -208,14 +208,17 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
 
-        dd($attr);
-        $defaultStore         = $defaultStore = $this->nullIfEmpty(
-            json_decode($attr['DefaultStore'] ?? '', true)['location'] ?? null
+        $defaultStoreRaw = $attr['DefaultStore'] ?? null;
+        $secondaryStoreRaw = $attr['SecondaryStore'] ?? null;
+
+        $defaultStore = $this->nullIfEmpty(
+            json_decode($defaultStoreRaw, true)['location'] ?? null
         );
-        $secondaryStore       = $defaultStore = $this->nullIfEmpty(
-            json_decode($attr['SecondaryStore'] ?? '', true)['location'] ?? null
+
+        $secondaryStore = $this->nullIfEmpty(
+            json_decode($secondaryStoreRaw, true)['location'] ?? null
         );
-        dd($defaultStore, $secondaryStore);
+
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? null);
         $pswPriceListItemCategory = $this->nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
@@ -327,7 +330,7 @@ class GetProductService implements UserOperationInterface
             'erplyStatus' => $status
         ];
 
-        // dd($fields);
+        dd($fields);
 // dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
         // Update or create
         $change = $this->liveProductMatrix->updateOrCreate(
