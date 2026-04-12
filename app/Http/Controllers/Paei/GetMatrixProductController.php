@@ -43,7 +43,7 @@ class GetMatrixProductController extends Controller
         $param = array(
             "orderBy" => "added",
             "orderByDir" => "asc",
-            "addedSince" => $this->service->getLastUpdateDate(),
+            // "addedSince" => $this->service->getLastUpdateDate(),
             "recordsOnPage" => "1000",
             "includeMatrixVariations" => 1,
             "getPackagingMaterials" => 1,
