@@ -169,7 +169,7 @@ class GetProductService implements UserOperationInterface
         $erplyDeleted = 0;
 
         // Normalize status
-        $status = strtolower($attr['status'] ?? '');
+        $status = $product['status'] ?? null;
 
         if ($status === 'not_for_sale') {
             $webEnabled = 0;
@@ -329,7 +329,6 @@ class GetProductService implements UserOperationInterface
             'erplyAttributes' => json_encode($attributes ?? []),
             'erplyStatus' => $status
         ];
-        dd($status);
 
 // dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
         // Update or create
@@ -376,7 +375,8 @@ class GetProductService implements UserOperationInterface
         $erplyDeleted = 0;
 
         // Normalize status
-        $status = strtolower($attr['status'] ?? '');
+        $status = $product['status'] ?? null;
+
 
         if ($status === 'not_for_sale') {
             $webEnabled = 0;
