@@ -179,35 +179,35 @@ class GetProductService implements UserOperationInterface
         }
 
         // Assign all values safely
-        $schoolId             = nullIfEmpty($attr['SchoolID'] ?? null);
-        $schoolName           = nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
-        $customerGroup        = nullIfEmpty($attr['CustomerGroup'] ?? null);
-        $erplySKU             = nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
-        $webSKU               = nullIfEmpty($attr['WEBSKU'] ?? $erplySKU);
-        $itemId               = nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
-        $itemName             = nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
-        $colourId             = nullIfEmpty($attr['ColourID'] ?? null);
-        $colourName           = nullIfEmpty($attr['ColourName'] ?? null);
-        $sizeId               = nullIfEmpty($attr['SizeID'] ?? null);
-        $configId             = nullIfEmpty($attr['CONFIGID'] ?? null);
-        $configName           = nullIfEmpty($attr['ConfigName'] ?? null);
-        $eanBarcode           = nullIfEmpty($attr['EANBarcode'] ?? null);
-        $sofTemplate          = nullIfEmpty($attr['SOFTemplate'] ?? null);
-        $sofName              = nullIfEmpty($attr['SOFName'] ?? null);
-        $sofOrder             = nullIfEmpty($attr['SOFOrder'] ?? null);
-        $sofStatus            = nullIfEmpty($attr['SOFStatus'] ?? null);
-        $plmStatus            = nullIfEmpty($attr['PLMStatus'] ?? null);
-        $productType          = nullIfEmpty($attr['ProductType'] ?? null);
-        $productSubType       = nullIfEmpty($attr['ProductSubType'] ?? null);
-        $supplier             = nullIfEmpty($attr['Supplier'] ?? ($product['supplierName'] ?? null));
-        $gender               = nullIfEmpty($attr['Gender'] ?? null);
-        $categoryName         = nullIfEmpty($attr['CategoryName'] ?? null);
-        $itemWeightGrams      = nullIfEmpty($attr['ItemWeightGrams'] ?? null);
-        $defaultStore         = nullIfEmpty($attr['DefaultStore'] ?? null);
-        $secondaryStore       = nullIfEmpty($attr['SecondaryStore'] ?? null);
-        $erplyFlagModified    = nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
-        $category_Name        = nullIfEmpty($attr['Category_Name'] ?? null);
-        $pswPriceListItemCategory = nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
+        $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? null);
+        $schoolName           = $this->nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
+        $customerGroup        = $this->nullIfEmpty($attr['CustomerGroup'] ?? null);
+        $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
+        $webSKU               = $this->nullIfEmpty($attr['WEBSKU'] ?? $erplySKU);
+        $itemId               = $this->nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
+        $itemName             = $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
+        $colourId             = $this->nullIfEmpty($attr['ColourID'] ?? null);
+        $colourName           = $this->nullIfEmpty($attr['ColourName'] ?? null);
+        $sizeId               = $this->nullIfEmpty($attr['SizeID'] ?? null);
+        $configId             = $this->nullIfEmpty($attr['CONFIGID'] ?? null);
+        $configName           = $this->nullIfEmpty($attr['ConfigName'] ?? null);
+        $eanBarcode           = $this->nullIfEmpty($attr['EANBarcode'] ?? null);
+        $sofTemplate          = $this->nullIfEmpty($attr['SOFTemplate'] ?? null);
+        $sofName              = $this->nullIfEmpty($attr['SOFName'] ?? null);
+        $sofOrder             = $this->nullIfEmpty($attr['SOFOrder'] ?? null);
+        $sofStatus            = $this->nullIfEmpty($attr['SOFStatus'] ?? null);
+        $plmStatus            = $this->nullIfEmpty($attr['PLMStatus'] ?? null);
+        $productType          = $this->nullIfEmpty($attr['ProductType'] ?? null);
+        $productSubType       = $this->nullIfEmpty($attr['ProductSubType'] ?? null);
+        $supplier             = $this->nullIfEmpty($attr['Supplier'] ?? ($product['supplierName'] ?? null));
+        $gender               = $this->nullIfEmpty($attr['Gender'] ?? null);
+        $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
+        $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
+        $defaultStore         = $this->nullIfEmpty($attr['DefaultStore'] ?? null);
+        $secondaryStore       = $this->nullIfEmpty($attr['SecondaryStore'] ?? null);
+        $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
+        $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? null);
+        $pswPriceListItemCategory = $this->nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
 
         $itemLastModified     = !empty($attr['ItemLastModified'])
             ? date('Y-m-d H:i:s', strtotime($attr['ItemLastModified']))
@@ -226,12 +226,12 @@ class GetProductService implements UserOperationInterface
             : null;
 
         $availableForPurchase = $attr['AvailableForPurchase'] ?? 1;
-        $customItemName       = nullIfEmpty($attr['customItemName'] ?? null);
-        $receiptDescription   = nullIfEmpty($attr['receiptDescription'] ?? null);
+        $customItemName       = $this->nullIfEmpty($attr['customItemName'] ?? null);
+        $receiptDescription   = $this->nullIfEmpty($attr['receiptDescription'] ?? null);
         $barcodeDuplicate     = $attr['barcodeDuplicate'] ?? 0;
         $colorFlag            = $attr['colorFlag'] ?? 0;
         $genericProduct       = $attr['genericProduct'] ?? 0;
-        $erplyError           = nullIfEmpty($attr['erplyError'] ?? null);
+        $erplyError           = $this->nullIfEmpty($attr['erplyError'] ?? null);
         $vUpdate              = $attr['vUpdate'] ?? 1;
         $mUpdate              = $attr['mUpdate'] ?? 1;
         $pushCount            = $attr['pushCount'] ?? 0;
@@ -239,7 +239,7 @@ class GetProductService implements UserOperationInterface
         $assortmentPending    = $attr['assortmentPending'] ?? 1;
         $assortmentRemovePending = $attr['assortmentRemovePending'] ?? 1;
         $imagePending         = $attr['imagePending'] ?? 1;
-        $imageUrl             = nullIfEmpty($attr['imageUrl'] ?? null);
+        $imageUrl             = $this->nullIfEmpty($attr['imageUrl'] ?? null);
         $variationPending     = $attr['variationPending'] ?? 1;
         $checkErply           = $attr['checkErply'] ?? 1;
 
@@ -331,6 +331,11 @@ class GetProductService implements UserOperationInterface
 
         return $change;
     }
+
+   private function nullIfEmpty($value)
+    {
+        return $value === '' ? null : $value;
+    }
     protected function variationSaveUpdate($product, $clientCode)
     {
 
@@ -366,34 +371,34 @@ class GetProductService implements UserOperationInterface
         }
 
         // ✅ ALL VARIABLES WITH SAFE FALLBACKS
-        $schoolId             = nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
-        $schoolName           = nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
-        $customerGroup        = nullIfEmpty($attr['CustomerGroup'] ?? null);
-        $erplySKU             = nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
-        $webSKU               = nullIfEmpty($attr['WEBSKU'] ?? ($product['code2'] ?? null));
-        $itemId               = nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
-        $itemName             = nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
-        $colourId             = nullIfEmpty($attr['ColourID'] ?? null);
-        $colourName           = nullIfEmpty($attr['ColourName'] ?? null);
-        $sizeId               = nullIfEmpty($attr['SizeID'] ?? null);
-        $configId             = nullIfEmpty($attr['CONFIGID'] ?? null);
-        $configName           = nullIfEmpty($attr['ConfigName'] ?? null);
-        $eanBarcode           = nullIfEmpty($attr['EANBarcode'] ?? ($product['code'] ?? null));
-        $sofTemplate          = nullIfEmpty($attr['SOFTemplate'] ?? null);
-        $sofName              = nullIfEmpty($attr['SOFName'] ?? null);
-        $sofOrder             = nullIfEmpty($attr['SOFOrder'] ?? null);
-        $sofStatus            = nullIfEmpty($attr['SOFStatus'] ?? null);
-        $plmStatus            = nullIfEmpty($attr['PLMStatus'] ?? null);
-        $productType          = nullIfEmpty($attr['ProductType'] ?? ($product['type'] ?? null));
-        $productSubType       = nullIfEmpty($attr['ProductSubType'] ?? ($product['seriesName'] ?? null));
-        $supplier             = nullIfEmpty($attr['Supplier'] ?? ($product['supplierName'] ?? null));
-        $gender               = nullIfEmpty($attr['Gender'] ?? null);
-        $categoryName         = nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
-        $itemWeightGrams      = nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
+        $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
+        $schoolName           = $this->nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
+        $customerGroup        = $this->nullIfEmpty($attr['CustomerGroup'] ?? null);
+        $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
+        $webSKU               = $this->nullIfEmpty($attr['WEBSKU'] ?? ($product['code2'] ?? null));
+        $itemId               = $this->nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
+        $itemName             = $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
+        $colourId             = $this->nullIfEmpty($attr['ColourID'] ?? null);
+        $colourName           = $this->nullIfEmpty($attr['ColourName'] ?? null);
+        $sizeId               = $this->nullIfEmpty($attr['SizeID'] ?? null);
+        $configId             = $this->nullIfEmpty($attr['CONFIGID'] ?? null);
+        $configName           = $this->nullIfEmpty($attr['ConfigName'] ?? null);
+        $eanBarcode           = $this->nullIfEmpty($attr['EANBarcode'] ?? ($product['code'] ?? null));
+        $sofTemplate          = $this->nullIfEmpty($attr['SOFTemplate'] ?? null);
+        $sofName              = $this->nullIfEmpty($attr['SOFName'] ?? null);
+        $sofOrder             = $this->nullIfEmpty($attr['SOFOrder'] ?? null);
+        $sofStatus            = $this->nullIfEmpty($attr['SOFStatus'] ?? null);
+        $plmStatus            = $this->nullIfEmpty($attr['PLMStatus'] ?? null);
+        $productType          = $this->nullIfEmpty($attr['ProductType'] ?? ($product['type'] ?? null));
+        $productSubType       = $this->nullIfEmpty($attr['ProductSubType'] ?? ($product['seriesName'] ?? null));
+        $supplier             = $this->nullIfEmpty($attr['Supplier'] ?? ($product['supplierName'] ?? null));
+        $gender               = $this->nullIfEmpty($attr['Gender'] ?? null);
+        $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
+        $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
 
-        $defaultStore         = nullIfEmpty($attr['DefaultStore'] ?? null);
-        $secondaryStore       = nullIfEmpty($attr['SecondaryStore'] ?? null);
-        $erplyFlagModified    = nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
+        $defaultStore         = $this->nullIfEmpty($attr['DefaultStore'] ?? null);
+        $secondaryStore       = $this->nullIfEmpty($attr['SecondaryStore'] ?? null);
+        $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $sofLastModified      = !empty($attr['SOFLastModified'])
             ? date('Y-m-d H:i:s', strtotime($attr['SOFLastModified']))
             : null;
@@ -412,12 +417,12 @@ class GetProductService implements UserOperationInterface
             ? date('Y-m-d H:i:s', strtotime($attr['PriceLastModified']))
             : (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
 
-        $pswPriceListItemCategory = nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
-        $category_Name        = nullIfEmpty($attr['Category_Name'] ?? null);
-        $icsc                 = nullIfEmpty($attr['ICSC'] ?? null);
-        $customItemName       = nullIfEmpty($attr['customItemName'] ?? null);
-        $receiptDescription   = nullIfEmpty($attr['receiptDescription'] ?? null);
-        $erplyError           = nullIfEmpty($attr['erplyError'] ?? null);
+        $pswPriceListItemCategory = $this->nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
+        $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? null);
+        $icsc                 = $this->nullIfEmpty($attr['ICSC'] ?? null);
+        $customItemName       = $this->nullIfEmpty($attr['customItemName'] ?? null);
+        $receiptDescription   = $this->nullIfEmpty($attr['receiptDescription'] ?? null);
+        $erplyError           = $this->nullIfEmpty($attr['erplyError'] ?? null);
 
         /* Numeric / flags (keep defaults) */
         $retailSalesPrice         = $attr['RetailSalesPrice'] ?? ($product['price'] ?? 0);
