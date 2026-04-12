@@ -258,11 +258,11 @@ class GetProductService implements UserOperationInterface
         $checkErply           = $attr['checkErply'] ?? 1;
 
         /* Numeric fields (keep 0 default, don't convert to null) */
-        $retailSalesPrice         = $this->nullIfEmpty($attr['RetailSalesPrice'] ?? 0);
-        $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 0);
-        $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 0);
-        $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 0);
-        $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 0);
+        $retailSalesPrice         = $this->nullIfEmpty($attr['RetailSalesPrice'] ?? 0.0);
+        $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 0.0);
+        $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 0.0);
+        $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 0.0);
+        $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 0.0);
         $fields = [
             'erplyID' => $itemId,
             'type' => $product['type'] ?? 'MATRIX',
