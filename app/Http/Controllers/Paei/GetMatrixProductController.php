@@ -44,7 +44,7 @@ class GetMatrixProductController extends Controller
             "orderBy" => "added",
             "orderByDir" => "asc",
             "addedSince" => $this->service->getLastUpdateDate(),
-            "recordsOnPage" => "100",
+            "recordsOnPage" => "1000",
             "includeMatrixVariations" => 1,
             "getPackagingMaterials" => 1,
             "getRecipes" => 1,
@@ -65,7 +65,7 @@ class GetMatrixProductController extends Controller
         //  print_r($param);
         //  die;
         $res = $this->api->sendRequest("getProducts", $param,0,0,0);
-dump($res);
+dump($res,$param);
         // dd($res);
          if($res['status']['errorCode'] == 0 && !empty($res['records'])){
 
