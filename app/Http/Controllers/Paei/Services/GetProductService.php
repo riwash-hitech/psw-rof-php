@@ -320,7 +320,8 @@ class GetProductService implements UserOperationInterface
             'variationPending' => $variationPending,
             'checkErply' => $checkErply,
             'erplyDeleted' => $erplyDeleted,
-            'erplyAttributes' => $attributes ?? []
+            'erplyAttributes' => $attributes ?? [],
+            'erplyStatus' => $status
         ];
 
         // dd($fields);
@@ -378,7 +379,7 @@ class GetProductService implements UserOperationInterface
             $webEnabled = 1;
             $erplyEnabled = 1;
         } elseif ($status === 'archived') {
-            $erplyDeleted = 1;
+            $erplyEnabled = 0;
         }
 
         // ✅ ALL VARIABLES WITH SAFE FALLBACKS
@@ -578,7 +579,9 @@ class GetProductService implements UserOperationInterface
 
                 // RAW DATA
                 "compareField"         => $compareField,
-                "erplyAttributes" => $attributes ?? []
+                "erplyAttributes" => $attributes ?? [],
+                "erplyStatus" => $status
+
             ]
         );
 
