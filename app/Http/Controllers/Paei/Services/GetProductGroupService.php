@@ -56,7 +56,7 @@ class GetProductGroupService implements UserOperationInterface{
 
                 ]
             );
-            $this->letsLog->setChronLog($old ? json_encode($old, true) : '', json_encode($change, true), $old  ? "Product Group Updated" : "Product Group Created");        
+            $this->letsLog->setChronLog($old ? json_encode($old, true) : '', json_encode($change, true), $old  ? "Product Group Updated" : "Product Group Created");
     }
 
     public function saveUpdate($products){
@@ -99,7 +99,7 @@ class GetProductGroupService implements UserOperationInterface{
 
     public function getLastUpdateDate(){
         // echo "im call";
-         $latest = $this->group->where('clientCode',$this->api->client->clientCode )->orderBy('changed', 'desc')->first();
+         $latest = $this->group->where('clientCode',$this->api->client->clientCode )->orderBy('added', 'desc')->first();
         if($latest){
             return strtotime($latest->changed);
         }
@@ -108,7 +108,7 @@ class GetProductGroupService implements UserOperationInterface{
 
     //for  operation logs
     public function deleteRecords($res, $clientCode){
- 
+
         foreach($res as $l){
             $this->handleOperationLog($l,$clientCode,  $l['itemID']);
             if($l['operation'] == 'delete'){
