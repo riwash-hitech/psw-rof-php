@@ -41,7 +41,7 @@ class GetMatrixProductController extends Controller
 
         info("Cron Called for Product Sync This is Old Version");
         $param = array(
-            "orderBy" => "changed",
+            "orderBy" => "added",
             "orderByDir" => "asc",
             "changedSince" => $this->service->getLastUpdateDate(),
             "recordsOnPage" => "100",
