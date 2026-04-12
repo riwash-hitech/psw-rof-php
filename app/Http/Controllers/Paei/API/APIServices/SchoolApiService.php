@@ -425,7 +425,7 @@ class SchoolApiService
         if (count($sofTemplate) > 0) {
             $currentSOF = $sofTemplate[0]["SOFTemplate"];
         }
-        if (isset($req->sofTemplate) == 1) {
+        if (isset($req->sofTemplate)) {
             $currentSOF = $req->sofTemplate;
         }
 
