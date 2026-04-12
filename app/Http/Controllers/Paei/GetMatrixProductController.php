@@ -101,7 +101,7 @@ dump($res,$param);
         //  dd($param);
         //  die;
          $res = $this->api->sendRequest("getProducts", $param,0,0,0);
-        dd($res);
+        // dd($res);
          if($res['status']['errorCode'] == 0 && !empty($res['records'])){
             return $this->service->saveUpdateV2($res['records']);
          }

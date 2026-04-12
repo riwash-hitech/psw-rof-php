@@ -437,9 +437,9 @@ class GetProductService implements UserOperationInterface
         $priceLastModified    = !empty($attr['PriceLastModified'])
             ? date('Y-m-d H:i:s', strtotime($attr['PriceLastModified']))
             : (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
-
-        $pswPriceListItemCategory = $this->nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
-        $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? null);
+        $pswPriceListItemCategory = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[0] ?? null));
+        $attCateName = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[1] ?? null));
+        $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ? $attCateName : null);
         $icsc                 = $this->nullIfEmpty($attr['ICSC'] ?? null);
         $customItemName       = $this->nullIfEmpty($attr['customItemName'] ?? null);
         $receiptDescription   = $this->nullIfEmpty($attr['receiptDescription'] ?? null);
