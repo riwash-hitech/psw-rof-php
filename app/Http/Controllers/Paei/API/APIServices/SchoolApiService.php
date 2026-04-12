@@ -428,7 +428,6 @@ class SchoolApiService
         if (isset($req->sofTemplate) == 1) {
             $currentSOF = $req->sofTemplate;
         }
-        \DB::enableQueryLog();
 
         $query = $this->school
             // ->join("newstystem_store_location_live", "newstystem_store_location_live.LocationID", "newsystem_product_matrix_live.DefaultStore")
@@ -480,8 +479,15 @@ class SchoolApiService
                 }
             }
         });
-        $query->get();
-        dd(\DB::getQueryLog());
+
+        $sql = vsprintf(
+            str_replace('?', "'%s'", $query->toSql()),
+            $query->getBindings()
+        );
+
+        dd($sql);
+
+
 
 
 
