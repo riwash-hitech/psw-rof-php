@@ -213,6 +213,7 @@ class GetProductService implements UserOperationInterface
         $secondaryStore       = $defaultStore = $this->nullIfEmpty(
             json_decode($attr['SecondaryStore'] ?? '', true)['location'] ?? null
         );
+        dd($defaultStore, $secondaryStore);
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? null);
         $pswPriceListItemCategory = $this->nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
