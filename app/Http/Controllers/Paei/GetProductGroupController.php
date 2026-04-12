@@ -76,6 +76,52 @@ class GetProductGroupController extends Controller
         //  return response()->json(['status'=>200, 'message'=>"Product Group Data Not Found!"]);
     }
 
+    public function getProductGroupV2(){
+        $param = [
+            'take' => '100000'
+         ];
+
+         $res = $this->api->sendRequestBySwagger("https://api-pim-au.erply.com/v1/product/group", $param);
+         
+         if(is_array($res) && count($res) > 0){
+            return $this->service->saveUpdateV2($res);
+         }
+
+         return response()->json(['status'=>200, 'message'=>"Product Group Data Not Found!"]);
+        //  $param = [
+        //     "take" => "3000",
+        //     "sort" => json_encode([
+        //         "selector" => "added",
+        //         "desc" => false
+        //     ]),
+        //     "match" => ">=",
+        //     "added" => $this->service->getLastUpdateDate(),
+        //     "orderBy" => 'added',
+        //     "orderByDirection" => 'ASC'
+        //  ];
+
+        //  $p2 =[
+        //        'take' => '100000',
+        //        'sort' => json_encode([
+        //           "selector" => "added",
+        //           "desc" => false,
+        //         ]),
+        //        'filter' => '[["added", ">=", ' . $this->service->getLastUpdateDate() . ']]',
+        //     ];
+        // // echo $this->service->getLastUpdateDate();
+
+        // // $p2 = json_encode($p2, true);
+        // //  print_r($p2);
+        // //  die;
+        //  $res = $this->api->sendRequestBySwagger("https://api-pim-au.erply.com/v1/product/group", $param);
+        // //  dd($res);
+        //  if(count($res) > 0){
+        //     return $this->service->saveUpdate($res);
+        //  }
+
+        //  return response()->json(['status'=>200, 'message'=>"Product Group Data Not Found!"]);
+    }
+
     public function getOperationLog(){
 
         $param = array(

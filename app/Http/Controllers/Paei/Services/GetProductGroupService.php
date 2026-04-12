@@ -84,7 +84,7 @@ class GetProductGroupService implements UserOperationInterface{
                     "positionNo"  => @$product['positionNo'],
                     "parentGroupID"  => $product['parent_id'],
                     "images"  => '',//!empty($product['images']) ? json_encode($product['images'],1) : '',
-                    "subGroups"  => '',//!empty($product['subGroups']) ? json_encode($product['subGroups'],1) : ''
+                    "subGroups"  => '',//!empty($product['subGroups']) ? json_encode($product['subGroups'],1) : '',
                     "attributes"  => '',//!empty($product['attributes']) ? json_encode($product['attributes'],1) : '',
                     "vatrates"  =>  '',//!empty($product['vatrates']) ? json_encode($product['vatrates'],1) : '',
                     "added"  =>  date('Y-m-d H:i:s',$product['added']),
@@ -94,6 +94,48 @@ class GetProductGroupService implements UserOperationInterface{
 
                 ]
             );
+    }
+
+    // V2 method for PIM API response
+    public function saveUpdateV2($products){
+
+        foreach($products as $p){
+            $this->groupSaveUpdateV2($p);
+        }
+
+        return response()->json(['status'=>200, 'message'=>"Product Group fetched Successfully from PIM API."]);
+    }
+
+    protected function groupSaveUpdateV2($product){
+        //for log
+        $old = $this->group->where('clientCode',  $this->api->client->clientCode)->where('productGroupID', $product['id'])->first();
+        
+        $change = $this->group->updateOrCreate(
+                [
+                    "clientCode" => $this->api->client->clientCode,
+                    "productGroupID"  =>  $product['id']
+                ],
+                [
+                    "clientCode" => $this->api->client->clientCode,
+                    "productGroupID" => $product['id'],
+                    "name" => isset($product['name']['en']) ? $product['name']['en'] : '',
+                    "showInWebshop" => $product['show_in_webshop'],
+                    "nonDiscountable" => $product['non_discountable'],
+                    "positionNo"  => $product['order'],
+                    "parentGroupID"  => $product['parent_id'],
+                    "images"  => '',
+                    "subGroups"  => '',
+                    "attributes"  => '',
+                    "vatrates"  =>  '',
+                    "added"  =>  $product['added'] > 0 ? date('Y-m-d H:i:s', $product['added']) : null,
+                    "addedBy" => @$product['addedby'],
+                    "changed" => $product['changed'] > 0 ? date('Y-m-d H:i:s', $product['changed']) : null,
+                    "changedBy" => @$product['changedby'],
+
+                ]
+            );
+            
+        $this->letsLog->setChronLog($old ? json_encode($old, true) : '', json_encode($change, true), $old  ? "Product Group Updated (V2)" : "Product Group Created (V2)");
     }
 
 
