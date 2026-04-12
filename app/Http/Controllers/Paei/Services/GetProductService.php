@@ -258,11 +258,11 @@ class GetProductService implements UserOperationInterface
         $checkErply           = $attr['checkErply'] ?? 1;
 
         /* Numeric fields (keep 0 default, don't convert to null) */
-        $retailSalesPrice         = $this->nullIfEmpty($attr['RetailSalesPrice'] ?? 0.0);
-        $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 0.0);
-        $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 0.0);
-        $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 0.0);
-        $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 0.0);
+        $retailSalesPrice         = $this->nullIfEmpty($attr['RetailSalesPrice'] ?? 00.00);
+        $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 00.00);
+        $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 00.00);
+        $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 00.00);
+        $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 00.00);
         $fields = [
             'erplyID' => $itemId,
             'type' => $product['type'] ?? 'MATRIX',
@@ -329,7 +329,6 @@ class GetProductService implements UserOperationInterface
             'erplyAttributes' => json_encode($attributes ?? []),
             'erplyStatus' => $status
         ];
-dd($fields);
 // dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
         // Update or create
         $change = $this->liveProductMatrix->updateOrCreate(
@@ -447,11 +446,11 @@ dd($fields);
         $erplyError           = $this->nullIfEmpty($attr['erplyError'] ?? null);
 
         /* Numeric / flags (keep defaults) */
-        $retailSalesPrice         = $attr['RetailSalesPrice'] ?? ($product['price'] ?? 0);
-        $retailSalesPrice2        = $attr['RetailSalesPrice2'] ?? ($product['priceWithVat'] ?? 0);
-        $retailSalesPriceExclGST  = $attr['RetailSalesPriceExclGST'] ?? 0;
-        $retailSalesPriceExclGST2 = $attr['RetailSalesPriceExclGST2'] ?? 0;
-        $costPrice                = $attr['CostPrice'] ?? ($product['cost'] ?? 0);
+        $retailSalesPrice         = $this->nullIfEmpty($attr['RetailSalesPrice'] ?? 00.00);
+        $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 00.00);
+        $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 00.00);
+        $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 00.00);
+        $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 00.00);
 
         $barcodeDuplicate     = $attr['barcodeDuplicate'] ?? 0;
         $colorFlag            = $attr['colorFlag'] ?? 0;
