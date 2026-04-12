@@ -536,7 +536,6 @@ class SchoolApiService
             if ($item->variations_count == 1 && !$item->variations->isEmpty()) {
                 $defaultStore = @$item->variations[0]->DefaultStore;
                 $item->SizeID = @$item->variations[0]->SizeID;
-                $item->SizeName = '2XL';
                 $item->ColourName = @$item->variations[0]->ColourName;
                 $item->PSWPRICELISTITEMCATEGORY = @$item->variations[0]->PSWPRICELISTITEMCATEGORY;
                 // $item->load(['variations.stocks' => function ($q) use ($defaultStore) {
