@@ -51,6 +51,7 @@ class GetMatrixProductController extends Controller
             "getRelatedFiles" => 1,
             "getRelatedProducts" => 1,
             "getReplacementProducts" => 1,
+            "productID" => 262109,
             // "searchAttributeName" => 'defaultStore',
             // "searchAttributeValue" => '3R390',
             // "getStockInfo" => 1,
@@ -66,7 +67,7 @@ class GetMatrixProductController extends Controller
         //  die;
         $res = $this->api->sendRequest("getProducts", $param,0,0,0);
 dump($res,$param);
-        // dd($res);
+        dd($res);
          if($res['status']['errorCode'] == 0 && !empty($res['records'])){
 
             return $this->service->saveUpdate($res['records']);

@@ -156,6 +156,9 @@ class GetProductService implements UserOperationInterface
 
         $attr = [];
 
+        $attributes = $product['attributes'] ?? [];
+
+
         if (isset($product['attributes']) && is_array($product['attributes'])) {
             // Extract attributes from matrix
             $attr = array_column($product['attributes'], 'attributeValue', 'attributeName');
@@ -203,8 +206,12 @@ class GetProductService implements UserOperationInterface
         $gender               = $this->nullIfEmpty($attr['Gender'] ?? null);
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
-        $defaultStore         = $this->nullIfEmpty($attr['DefaultStore'] ?? null);
-        $secondaryStore       = $this->nullIfEmpty($attr['SecondaryStore'] ?? null);
+        $defaultStore         = $defaultStore = $this->nullIfEmpty(
+            json_decode($attr['DefaultStore'] ?? '', true)['location'] ?? null
+        );
+        $secondaryStore       = $defaultStore = $this->nullIfEmpty(
+            json_decode($attr['SecondaryStore'] ?? '', true)['location'] ?? null
+        );
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? null);
         $pswPriceListItemCategory = $this->nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
@@ -311,7 +318,8 @@ class GetProductService implements UserOperationInterface
             'imageUrl' => $imageUrl,
             'variationPending' => $variationPending,
             'checkErply' => $checkErply,
-            'erplyDeleted' => $erplyDeleted
+            'erplyDeleted' => $erplyDeleted,
+            'erplyAttributes' => $attributes ?? []
         ];
 
         // dd($fields);
@@ -348,6 +356,7 @@ class GetProductService implements UserOperationInterface
 
         // Extract attributes as key => value
         $attr = [];
+        $attributes = $product['attributes'] ?? [];
 
         if (isset($product['attributes']) && is_array($product['attributes'])) {
             // Extract attributes from matrix
@@ -397,8 +406,12 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
 
-        $defaultStore         = $this->nullIfEmpty($attr['DefaultStore'] ?? null);
-        $secondaryStore       = $this->nullIfEmpty($attr['SecondaryStore'] ?? null);
+        $defaultStore         = $defaultStore = $this->nullIfEmpty(
+            json_decode($attr['DefaultStore'] ?? '', true)['location'] ?? null
+        );
+        $secondaryStore       = $defaultStore = $this->nullIfEmpty(
+            json_decode($attr['SecondaryStore'] ?? '', true)['location'] ?? null
+        );
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $sofLastModified      = !empty($attr['SOFLastModified'])
             ? date('Y-m-d H:i:s', strtotime($attr['SOFLastModified']))
@@ -564,6 +577,7 @@ class GetProductService implements UserOperationInterface
 
                 // RAW DATA
                 "compareField"         => $compareField,
+                "erplyAttributes" => $attributes ?? []
             ]
         );
 
