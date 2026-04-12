@@ -627,14 +627,14 @@ class GetProductService implements UserOperationInterface
             'icsc' => $icsc,
             'AvailablePhysical' => $sohDefault,
             'warehouse' => $defaultStore,
-            'itemID' => $itemId
+            'item' => $itemId
         ];
 
         $sohSecData = [
             'icsc' => $icsc,
             'AvailablePhysical' => $sohSecondary,
             'warehouse' => $secondaryStore,
-            'itemID' => $itemId
+            'item' => $itemId
         ];
 
         $soh = LiveItemByLocation::updateOrCreate(
