@@ -41,9 +41,9 @@ class GetMatrixProductController extends Controller
 
         info("Cron Called for Product Sync This is Old Version");
         $param = array(
-            "orderBy" => "changed",
+            "orderBy" => "added",
             "orderByDir" => "asc",
-            "changedSince" => $this->service->getLastUpdateDate(),
+            "addedSince" => $this->service->getLastUpdateDate(),
             "recordsOnPage" => "100",
             "includeMatrixVariations" => 1,
             "getPackagingMaterials" => 1,
@@ -60,12 +60,12 @@ class GetMatrixProductController extends Controller
             // "active" => 1,
             "sessionKey" => $this->api->client->sessionKey
          );
-dd($this->service->getLastUpdateDate(), $param);
+// dd($this->service->getLastUpdateDate(), $param);
 
         //  print_r($param);
         //  die;
         $res = $this->api->sendRequest("getProducts", $param,0,0,0);
-
+dump($res);
         // dd($res);
          if($res['status']['errorCode'] == 0 && !empty($res['records'])){
 
