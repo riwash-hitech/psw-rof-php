@@ -467,6 +467,7 @@ class SchoolApiService
         if ($req->has('schoolID')) {
             $query->where("newsystem_product_matrix_live.SchoolID", $req->schoolID);
         }
+
         $query->where(function ($q) use ($requestData, $req) {
             foreach ($requestData as $keys => $value) {
                 if ($value != null) {
@@ -479,7 +480,7 @@ class SchoolApiService
             }
         });
 
-        dump($query->get());
+        dd($query->toSql(), $query->getBindings());
 
 
 
