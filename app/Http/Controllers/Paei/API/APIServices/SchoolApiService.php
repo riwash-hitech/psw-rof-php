@@ -429,8 +429,6 @@ class SchoolApiService
             $currentSOF = $req->sofTemplate;
         }
 
-
-
         $query = $this->school
             // ->join("newstystem_store_location_live", "newstystem_store_location_live.LocationID", "newsystem_product_matrix_live.DefaultStore")
             // ->where("newstystem_store_location_live.erplyID", $req->posID)
@@ -466,9 +464,14 @@ class SchoolApiService
                     "PSWPRICELISTITEMCATEGORY",
                 ]
             );
+
         if ($req->has('schoolID')) {
             $query->where("newsystem_product_matrix_live.SchoolID", $req->schoolID);
         }
+
+
+        if(!isset($req->sofTemplate)) {
+
         $query->where(function ($q) use ($requestData, $req) {
             foreach ($requestData as $keys => $value) {
                 if ($value != null) {
@@ -480,9 +483,7 @@ class SchoolApiService
                 }
             }
         });
-
-
-
+        }
 
         $results = $query
             ->with(
@@ -862,13 +863,12 @@ class SchoolApiService
         $requestData = $req->except(Except::$except);
         $colourID = $req->ColourID ?? '';
         $matrix = LiveProductMatrix::where("WEBSKU", $req->WEBSKU)->first();
-
         //first checking is there multiple colour
         $colours = LiveProductVariation::select("ColourName")
             ->where("WEBSKU", $req->WEBSKU)
-            ->when($colourID != '', function ($q) use ($colourID) {
-                $q->where("ColourID", $colourID);
-            })
+            // ->when($colourID != '', function ($q) use ($colourID) {
+            //     $q->where("ColourID", $colourID);
+            // })
             ->where("erplyID", '>', 0)
             ->where("erplyEnabled", 1)
             ->where("PSWPRICELISTITEMCATEGORY", '>', 0)
@@ -880,6 +880,8 @@ class SchoolApiService
             ->orderBy("ColourName", "asc")
             ->pluck("ColourName")
             ->toArray();
+
+            // dd($colours);
         $slideData = array();
         foreach ($colours as $color) {
             $datas = LiveProductVariation::with(
