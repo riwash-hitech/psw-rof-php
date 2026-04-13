@@ -209,16 +209,14 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
 
-        $decodeStoreLocation = function ($json) {
-            $data = json_decode($json ?? '', true);
-            return $this->nullIfEmpty($data[0]['location'] ?? null);
-        };
+        // $decodeStoreLocation = function ($json) {
+        //     $data = json_decode($json ?? '', true);
+        //     return $this->nullIfEmpty($data[0]['location'] ?? null);
+        // };
 
         // Default Store
-        $defaultStore = $decodeStoreLocation($attr['DefaultStore'] ?? null);
-
-        // Secondary Store
-        $secondaryStore = $decodeStoreLocation($attr['SecondaryStore'] ?? null);
+        $defaultStore = $attr['DefaultStore'] ?? null;
+        $secondaryStore = $attr['SecondaryStore'] ?? null;
 
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $pswPriceListItemCategory = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[0] ?? null));
@@ -412,10 +410,10 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
 
-        $decodeStoreLocation = function ($json) {
-            $data = json_decode($json ?? '', true);
-            return $this->nullIfEmpty($data[0]['location'] ?? null);
-        };
+        // $decodeStoreLocation = function ($json) {
+        //     $data = json_decode($json ?? '', true);
+        //     return $this->nullIfEmpty($data[0]['location'] ?? null);
+        // };
 
         $sumSOH = function ($json) {
             $total = 0;
@@ -432,16 +430,20 @@ class GetProductService implements UserOperationInterface
         };
 
         // Default Store
-        $defaultStore = $decodeStoreLocation($attr['DefaultStore'] ?? null);
+        // $defaultStore = $decodeStoreLocation($attr['DefaultStore'] ?? null);
 
-        // Secondary Store
-        $secondaryStore = $decodeStoreLocation($attr['SecondaryStore'] ?? null);
-
+        // // Secondary Store
+        // $secondaryStore = $decodeStoreLocation($attr['SecondaryStore'] ?? null);
+        $defaultStore = $attr['DefaultStore'] ?? null;
+        $secondaryStore = $attr['SecondaryStore'] ?? null;
         // SOH (Default)
-        $sohDefault = $sumSOH($attr['DefaultStore'] ?? null);
+        $sohDefault = $sumSOH($attr['PrimaryJSON'] ?? null);
+
+        $primaryJson = $attr['PrimaryJSON'] ?? null;
+        $secondaryJson = $attr['SecondaryJSON'] ?? null;
 
         // SOH (Secondary)
-        $sohSecondary = $sumSOH($attr['SecondaryStore'] ?? null);
+        $sohSecondary = $sumSOH($attr['SecondaryJSON'] ?? null);
 
 
 
@@ -633,6 +635,8 @@ class GetProductService implements UserOperationInterface
 
                 // RAW DATA
                 "compareField"         => $compareField,
+                "primaryJson"         => $primaryJson,
+                "secondaryJson"        => $secondaryJson,
                 "erplyAttributes" => json_encode($attributes ?? []),
                 "erplyStatus" => $status ?? null,
 
