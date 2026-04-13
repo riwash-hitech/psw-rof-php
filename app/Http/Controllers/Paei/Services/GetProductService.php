@@ -189,6 +189,7 @@ class GetProductService implements UserOperationInterface
         $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
         $webSKU               = $this->nullIfEmpty($attr['WEBSKU'] ?? $erplySKU);
         $itemId               = $this->nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
+        $productId               = $product['productID'] ?? null;
         $itemName             = $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
         $colourId             = $this->nullIfEmpty($attr['ColourID'] ?? null);
         $colourName           = $this->nullIfEmpty($attr['ColourName'] ?? null);
@@ -259,20 +260,20 @@ class GetProductService implements UserOperationInterface
         $checkErply           = $attr['checkErply'] ?? 1;
 
         /* Numeric fields (keep 0 default, don't convert to null) */
-        $retailSalesPrice         = $this->nullIfEmpty($attr['RetailSalesPrice'] ?? 00.00);
+        $retailSalesPrice         = $product['priceWithVat'] ?? 00.00;
         $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 00.00);
         $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 00.00);
         $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 00.00);
         $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 00.00);
         $fields = [
-            'erplyID' => $itemId,
+            'erplyID' => $productId,
             'type' => $product['type'] ?? 'MATRIX',
             'productAdded' => date('Y-m-d H:i:s', $product['added']),
             'SchoolID' => $schoolId,
             'SchoolName' => $schoolName,
             'CustomerGroup' => $customerGroup,
             'ERPLYSKU' => $erplySKU,
-            'WEBSKU' => $itemId,
+            'WEBSKU' => $productId,
             'ITEMID' => $itemId,
             'ItemName' => $itemName,
             'ColourID' => $colourId,
@@ -394,11 +395,8 @@ class GetProductService implements UserOperationInterface
         $customerGroup        = $this->nullIfEmpty($attr['CustomerGroup'] ?? null);
         $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
         $webSKU               = $this->nullIfEmpty($attr['WEBSKU'] ?? ($product['code2'] ?? null));
-        $itemId               = $this->nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
+        $itemId               = $this->nullIfEmpty($attr['ITEMID']  ?? null);
         $itemName             = $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
-        $colourId             = $this->nullIfEmpty($attr['ColourID'] ?? null);
-        $colourName           = $this->nullIfEmpty($attr['ColourName'] ?? null);
-        $sizeId               = $this->nullIfEmpty($attr['SizeID'] ?? null);
         $configId             = $this->nullIfEmpty($attr['CONFIGID'] ?? null);
         $configName           = $this->nullIfEmpty($attr['ConfigName'] ?? null);
         $eanBarcode           = $this->nullIfEmpty($attr['EANBarcode'] ?? ($product['code'] ?? null));
@@ -472,11 +470,9 @@ class GetProductService implements UserOperationInterface
 
         $icsc                 = $this->nullIfEmpty($attr['ICSC'] ?? null);
         $customItemName       = $this->nullIfEmpty($attr['customItemName'] ?? null);
-        $receiptDescription   = $this->nullIfEmpty($attr['receiptDescription'] ?? null);
-        $erplyError           = $this->nullIfEmpty($attr['erplyError'] ?? null);
 
         /* Numeric / flags (keep defaults) */
-        $retailSalesPrice         = $this->nullIfEmpty($attr['RetailSalesPrice'] ?? 00.00);
+        $retailSalesPrice         = $product['priceWithVat'] ?? 00.00;
         $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 00.00);
         $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 00.00);
         $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 00.00);
@@ -492,7 +488,27 @@ class GetProductService implements UserOperationInterface
         $assortmentPending    = $attr['assortmentPending'] ?? 1;
         $assortmentRemovePending = $attr['assortmentRemovePending'] ?? 1;
         $imagePending         = $attr['imagePending'] ?? 1;
+        //get color id and size id name
 
+        $variationDescription = $product['variationDescription'] ?? [];
+
+        $attributes = [];
+
+        foreach ($variationDescription as $variation) {
+            $key = strtolower(trim($variation['name'] ?? ''));
+
+            $attributes[$key] = [
+                'id'    => $variation['variationID'] ?? null,
+                'value' => $variation['value'] ?? null,
+            ];
+        }
+
+        // Access easily
+        $colorId   = $attributes['color']['id'] ?? null;
+        $colorName = $attributes['color']['value'] ?? null;
+
+        $sizeId    = $attributes['size']['id'] ?? null;
+        $sizeName  = $attributes['size']['value'] ?? null;
 
 
         // ✅ OLD RECORD
@@ -578,7 +594,7 @@ class GetProductService implements UserOperationInterface
 
                 // SOF
                 "SOFTemplate"         => $sofTemplate,
-                "SOFName"             => $sofName,
+                "SOFName"             => $category_Name,
                 "SOFOrder"            => $sofOrder,
                 "SOFStatus"           => $sofStatus,
                 "PLMStatus"           => $plmStatus,
@@ -587,11 +603,11 @@ class GetProductService implements UserOperationInterface
                 // ITEM DETAILS
                 "ConfigName"          => $configName,
                 "CONFIGID"            => $configId,
-                "ColourName"          => $colourName,
-                "ColourID"            => $colourId,
-                "SizeID"              => $sizeId,
+                "ColourName"          => $colorName,
+                "ColourID"            => $colorId,
+                "SizeID"              => $sizeName,
                 "customItemName"      => $customItemName,
-                "receiptDescription"  => $receiptDescription,
+
 
                 // DATES
                 "ItemLastModified"     => $itemLastModified,
@@ -608,7 +624,7 @@ class GetProductService implements UserOperationInterface
                 "genericProduct"       => $genericProduct,
                 "checkErply"           => $checkErply,
                 "erplyDeleted"         => $erplyDeleted,
-                "erplyError"           => $erplyError,
+
                 "assortmentPending"    => $assortmentPending,
                 "assortmentRemovePending" => $assortmentRemovePending,
                 "erplyEnabled"         => $erplyEnabled,
@@ -996,6 +1012,17 @@ class GetProductService implements UserOperationInterface
         if ($vlatest) {
             $l = $mlatest->productAdded > $vlatest->productAdded ? $mlatest->productAdded : $vlatest->productAdded;
             return strtotime($l);
+        }
+        return 0; // strtotime($latest);
+    }
+
+    public function getProductByDateFilter($req)
+    {
+        // echo "im call";
+        $latest = UserOperationLog::where('clientCode', $this->api->client->clientCode)->where('tableName', 'variation_products_live')->orderBy('timestamp', 'desc')->first();
+        if ($latest) {
+
+            return strtotime($latest->timestamp);
         }
         return 0; // strtotime($latest);
     }

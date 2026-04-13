@@ -9,6 +9,7 @@ use App\Http\Controllers\Paei\Services\GetProductService;
 use App\Http\Controllers\Services\EAPIService;
 use App\Models\{StockColorSize, StockDetail};
 use App\Traits\UserOperationTrait;
+use Illuminate\Http\Request;
 
 class GetMatrixProductController extends Controller
 {
@@ -37,14 +38,19 @@ class GetMatrixProductController extends Controller
         $this->userOperationInterface = $userOperationInterface;
     }
 
-    public function getProduct(){
-
+    public function getProduct(Request $request){
         info("Cron Called for Product Sync This is Old Version");
+
+        $syncType = $request->syncType ?? 'changeSince';
+        $orderBy = $request->orderBy ?? 'changed';
+        $sortBy = $request->sortBy ?? 'asc';
+        $limit = $request->limit ?? 100;
+
         $param = array(
-            "orderBy" => "added",
-            "orderByDir" => "asc",
-            // "addedSince" => $this->service->getLastUpdateDate(),
-            "recordsOnPage" => "1000",
+            "orderBy" => $orderBy,
+            "orderByDir" => $sortBy,
+            $syncType => $this->service->getLastUpdateDate(),
+            "recordsOnPage" => $limit,
             "includeMatrixVariations" => 1,
             "getPackagingMaterials" => 1,
             'status' => 'active',
@@ -52,6 +58,7 @@ class GetMatrixProductController extends Controller
             "getRelatedFiles" => 1,
             "getRelatedProducts" => 1,
             "getReplacementProducts" => 1,
+            // 'type' => 'PRODUCT',
             "productIDs" => '262102,262086,262105,262089,262119,262121,262123,262124,262115',
             // "searchAttributeName" => 'defaultStore',
             // "searchAttributeValue" => '3R390',
@@ -67,8 +74,9 @@ class GetMatrixProductController extends Controller
         //  print_r($param);
         //  die;
         $res = $this->api->sendRequest("getProducts", $param,0,0,0);
-dump($res,$param);
-        // dd($res);
+if(isset($request->debug) && $request->debug == 1){
+    dd($res,$param);
+}
          if($res['status']['errorCode'] == 0 && !empty($res['records'])){
 
             return $this->service->saveUpdate($res['records']);
