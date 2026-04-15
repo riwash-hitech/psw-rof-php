@@ -485,6 +485,7 @@ class SchoolApiService
         });
         }
 
+
         $results = $query
             ->with(
                 [
@@ -498,6 +499,7 @@ class SchoolApiService
                                 "SchoolID",
                                 "SchoolName",
                                 "ColourName",
+                                "ColourID",
                                 "SizeID",
                                 "ItemName",
                                 "ERPLYSKU",
@@ -533,6 +535,12 @@ class SchoolApiService
 
 
         $results->each(function ($item) use ($currentWarehouse, $newResults, $debug) {
+            $firstVar = $item->variations->first();
+
+            if ($firstVar) {
+                $item->ColourID   = $firstVar->ColourID;
+                $item->SizeID   = $firstVar->SizeID;
+            }
 
             if ($item->variations_count == 1 && !$item->variations->isEmpty()) {
                 $defaultStore = @$item->variations[0]->DefaultStore;
@@ -682,6 +690,7 @@ class SchoolApiService
                                 ));
                             }
                         });
+
 
                         $newMatrixProduct = clone $item;
                         // Modify the clone to reflect the current variation's details
@@ -927,6 +936,7 @@ class SchoolApiService
                 // ->orderBy("newsystem_product_size_sort_order_live.sort_order", "asc")
                 ->get();
             $datas->each(function ($variation) use($currentWarehouse){
+
                 if (is_null($variation->stocks)) {
                     $variation->setRelation('stocks', collect(
                         [
