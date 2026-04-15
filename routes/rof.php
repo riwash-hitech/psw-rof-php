@@ -1,5 +1,5 @@
 <?php
- 
+
 
 
 /*
@@ -13,23 +13,20 @@
 |
 */
 
-use App\Http\Controllers\Paei\API\CustomerAPIController;
-use App\Http\Controllers\Paei\API\NotificationApiController;
-use App\Http\Controllers\Paei\API\SchoolApiController;
-use App\Http\Controllers\Paei\API\WarehouseApiController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Paei\API\{CustomerAPIController, NotificationApiController, SchoolApiController, WarehouseApiController};
 use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Route; 
 
 Route::group(['middleware'=>'auth:sanctum'], function(){
 
     Route::post("/saveCustomer", [CustomerAPIController::class, 'saveCustomer']);
 
-    
- 
+
+
     //Temp API For School Only
     Route::get("/getSchool", [SchoolApiController::class, 'getSchool']); //only school for selection
     Route::get("/getSchoolV2", [SchoolApiController::class, 'getSchoolV2']); //only school for selection
-    
+
     Route::get("/getAllSchool", [SchoolApiController::class, 'getAll']); // variation product selected schools only
     Route::get("/getCartOrders", [SchoolApiController::class, 'getOfferOrder']);
     Route::post("/deleteOrder", [SchoolApiController::class, 'deleteOffer']);
@@ -48,7 +45,7 @@ Route::get("/getAllMatrix", [SchoolApiController::class, 'getAllMatrix']); //onl
 
 //for receipt
 Route::get("/getReceipt", [SchoolApiController::class, 'getReceipt']);
- 
+
 Route::group(["prefix" => "wms"], function(){
     Route::get("/warehouse/list", [WarehouseApiController::class, 'getWarehouseList']);
     Route::get("/orders", [WarehouseApiController::class, 'warehouseWiseOrders']);
@@ -73,7 +70,7 @@ Route::group(["prefix" => "wms"], function(){
 });
 
 Route::post("/erplyLogin", [UserController::class, 'erplyLogin']);
- 
+
 
 
 

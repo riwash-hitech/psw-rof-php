@@ -43,6 +43,8 @@ class GetCustomerController extends Controller
             "sessionKey" => $this->api->client->sessionKey
          );
 
+         dd($this->api->client);
+
          if($isAdded == 1){
             $param["createdUnixTimeFrom"] = $this->service->getLastUpdateDate(1);
          }
