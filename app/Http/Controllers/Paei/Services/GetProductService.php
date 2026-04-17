@@ -182,6 +182,22 @@ class GetProductService implements UserOperationInterface
             $webEnabled = 0;
         }
 
+        $sumSOH = function ($json) {
+            $total = 0;
+
+
+            $data = json_decode($json ?? '', true);
+
+
+            if (is_array($data)) {
+                foreach ($data as $row) {
+                    $total += (float) ($row['SOH'] ?? 0);
+                }
+            }
+
+            return $this->nullIfEmpty($total);
+        };
+
         // Assign all values safely
         $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
         $schoolName           = $this->nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
@@ -217,6 +233,19 @@ class GetProductService implements UserOperationInterface
         // Default Store
         $defaultStore = $attr['DefaultStore'] ?? null;
         $secondaryStore = $attr['SecondaryStore'] ?? null;
+
+
+        $attrLower = array_change_key_case($attr, CASE_LOWER);
+
+        $primaryJson   = $attrLower['primaryjson'] ?? null;
+        $secondaryJson = $attrLower['secondaryjson'] ?? null;
+
+        // SOH (Default)
+        $sohDefault = $sumSOH($primaryJson ?? null);
+        // SOH (Secondary)
+        $sohSecondary = $sumSOH($secondaryJson ?? null);
+
+        // dd($defaultStore, $secondaryStore);
 
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $pswPriceListItemCategory = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[0] ?? null));
@@ -256,6 +285,7 @@ class GetProductService implements UserOperationInterface
         $imageUrl             = $this->nullIfEmpty($attr['imageUrl'] ?? null);
         $variationPending     = $attr['variationPending'] ?? 1;
         $checkErply           = $attr['checkErply'] ?? 1;
+        $icsc                 = $this->nullIfEmpty($attr['ICSC'] ?? null);
 
         /* Numeric fields (keep 0 default, don't convert to null) */
         $retailSalesPrice         = $product['priceWithVat'] ?? 00.00;
@@ -336,12 +366,41 @@ class GetProductService implements UserOperationInterface
             $fields
         );
 
+
         // Log
         $this->letsLog->setChronLog(
             $old ? json_encode($old, true) : '',
             json_encode($change, true),
             $old ? "Matrix Product Updated" : "Matrix Product Created"
         );
+        $sohDefData = [
+            'icsc' => $icsc,
+            'AvailablePhysical' => $sohDefault,
+            'warehouse' => $defaultStore,
+            'item' => $product['productID'] ?? null
+        ];
+
+        $sohSecData = [
+            'icsc' => $icsc,
+            'AvailablePhysical' => $sohSecondary,
+            'warehouse' => $secondaryStore,
+            'item' => $product['productID'] ?? null
+
+        ];
+
+        $soh = LiveItemByLocation::updateOrCreate(
+            ['icsc' => $icsc, 'warehouse' => $defaultStore],
+            $sohDefData
+        );
+
+        dump($sohDefData, $soh, 'default');
+
+        $soh = LiveItemByLocation::updateOrCreate(
+            ['icsc' => $icsc, 'warehouse' => $secondaryStore],
+            $sohSecData
+        );
+
+        dump($sohSecData, $soh, 'secondary');
 
 
         return $change;
@@ -418,7 +477,9 @@ class GetProductService implements UserOperationInterface
         $sumSOH = function ($json) {
             $total = 0;
 
+
             $data = json_decode($json ?? '', true);
+
 
             if (is_array($data)) {
                 foreach ($data as $row) {
@@ -431,19 +492,25 @@ class GetProductService implements UserOperationInterface
 
         // Default Store
         // $defaultStore = $decodeStoreLocation($attr['DefaultStore'] ?? null);
-
+// dd($attr,$product);
         // // Secondary Store
         // $secondaryStore = $decodeStoreLocation($attr['SecondaryStore'] ?? null);
         $defaultStore = $attr['DefaultStore'] ?? null;
         $secondaryStore = $attr['SecondaryStore'] ?? null;
+
+
+
+        $attrLower = array_change_key_case($attr, CASE_LOWER);
+
+        $primaryJson   = $attrLower['primaryjson'] ?? null;
+        $secondaryJson = $attrLower['secondaryjson'] ?? null;
+
         // SOH (Default)
-        $sohDefault = $sumSOH($attr['PrimaryJSON'] ?? null);
-
-        $primaryJson = $attr['PrimaryJSON'] ?? null;
-        $secondaryJson = $attr['SecondaryJSON'] ?? null;
-
+        $sohDefault = $sumSOH($primaryJson ?? null);
         // SOH (Secondary)
-        $sohSecondary = $sumSOH($attr['SecondaryJSON'] ?? null);
+        $sohSecondary = $sumSOH($secondaryJson ?? null);
+
+        // dd($sohSecondary, $sohDefault);
 
 
 
@@ -647,25 +714,30 @@ class GetProductService implements UserOperationInterface
             'icsc' => $icsc,
             'AvailablePhysical' => $sohDefault,
             'warehouse' => $defaultStore,
-            'item' => $itemId
+            'item' => $product['productID'] ?? null
         ];
 
         $sohSecData = [
             'icsc' => $icsc,
             'AvailablePhysical' => $sohSecondary,
             'warehouse' => $secondaryStore,
-            'item' => $itemId
-        ];
+            'item' => $product['productID'] ?? null
 
+        ];
+//  dd($sohDefData,$sohSecData);
         $soh = LiveItemByLocation::updateOrCreate(
             ['icsc' => $icsc, 'warehouse' => $defaultStore],
             $sohDefData
         );
 
+        dump($sohDefData,$soh,'default');
+
         $soh = LiveItemByLocation::updateOrCreate(
             ['icsc' => $icsc, 'warehouse' => $secondaryStore],
             $sohSecData
         );
+
+        dump($sohSecData, $soh,'secondary');
 
 
         // ✅ LOG
