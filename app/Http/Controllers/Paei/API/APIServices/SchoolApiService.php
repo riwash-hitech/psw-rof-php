@@ -420,7 +420,6 @@ class SchoolApiService
         //first getting the distinct SOF Template
         // $sofTemplate  = $this->school->select("SOFTemplate", "SOFName")->where("SchoolID", $req->schoolID)->where("erplyEnabled", 1)->groupBy("SOFTemplate")->orderBy("SOFTemplate", 'asc')->get();
         $sofTemplate  = LiveProductVariation::select("SOFTemplate", "SOFName")->where("SchoolID", $req->schoolID)->where("erplyEnabled", 1)->groupBy("SOFTemplate")->orderBy("SOFTemplate", 'asc')->get();
-
         $currentSOF = '';
         if (count($sofTemplate) > 0) {
             $currentSOF = $sofTemplate[0]["SOFTemplate"];
@@ -428,6 +427,7 @@ class SchoolApiService
         if (isset($req->sofTemplate)) {
             $currentSOF = $req->sofTemplate;
         }
+
 
         $query = $this->school
             // ->join("newstystem_store_location_live", "newstystem_store_location_live.LocationID", "newsystem_product_matrix_live.DefaultStore")

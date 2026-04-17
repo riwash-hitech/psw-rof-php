@@ -225,20 +225,24 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
 
-        // $decodeStoreLocation = function ($json) {
-        //     $data = json_decode($json ?? '', true);
-        //     return $this->nullIfEmpty($data[0]['location'] ?? null);
-        // };
-
-        // Default Store
-        $defaultStore = $attr['DefaultStore'] ?? null;
-        $secondaryStore = $attr['SecondaryStore'] ?? null;
-
+        $decodeStoreLocation = function ($json) {
+            $data = json_decode($json ?? '', true);
+            return $this->nullIfEmpty($data[0]['location'] ?? null);
+        };
 
         $attrLower = array_change_key_case($attr, CASE_LOWER);
 
         $primaryJson   = $attrLower['primaryjson'] ?? null;
         $secondaryJson = $attrLower['secondaryjson'] ?? null;
+        // Default Store
+        // $defaultStore = $attr['DefaultStore'] ?? null;
+        // $secondaryStore = $attr['SecondaryStore'] ?? null;
+        // Default Store
+        $defaultStore = $decodeStoreLocation($primaryJson ?? null);
+        // Secondary Store
+        $secondaryStore = $decodeStoreLocation($secondaryJson ?? null);
+
+
 
         // SOH (Default)
         $sohDefault = $sumSOH($primaryJson ?? null);
@@ -393,14 +397,12 @@ class GetProductService implements UserOperationInterface
             $sohDefData
         );
 
-        dump($sohDefData, $soh, 'default');
 
         $soh = LiveItemByLocation::updateOrCreate(
             ['icsc' => $icsc, 'warehouse' => $secondaryStore],
             $sohSecData
         );
 
-        dump($sohSecData, $soh, 'secondary');
 
 
         return $change;
@@ -469,10 +471,10 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
 
-        // $decodeStoreLocation = function ($json) {
-        //     $data = json_decode($json ?? '', true);
-        //     return $this->nullIfEmpty($data[0]['location'] ?? null);
-        // };
+        $decodeStoreLocation = function ($json) {
+            $data = json_decode($json ?? '', true);
+            return $this->nullIfEmpty($data[0]['location'] ?? null);
+        };
 
         $sumSOH = function ($json) {
             $total = 0;
@@ -490,20 +492,17 @@ class GetProductService implements UserOperationInterface
             return $this->nullIfEmpty($total);
         };
 
-        // Default Store
-        // $defaultStore = $decodeStoreLocation($attr['DefaultStore'] ?? null);
-// dd($attr,$product);
-        // // Secondary Store
-        // $secondaryStore = $decodeStoreLocation($attr['SecondaryStore'] ?? null);
-        $defaultStore = $attr['DefaultStore'] ?? null;
-        $secondaryStore = $attr['SecondaryStore'] ?? null;
-
-
 
         $attrLower = array_change_key_case($attr, CASE_LOWER);
 
         $primaryJson   = $attrLower['primaryjson'] ?? null;
         $secondaryJson = $attrLower['secondaryjson'] ?? null;
+        // Default Store
+        $defaultStore = $decodeStoreLocation($primaryJson ?? null);
+        // Secondary Store
+        $secondaryStore = $decodeStoreLocation($secondaryJson ?? null);
+        // $defaultStore = $attr['DefaultStore'] ?? null;
+        // $secondaryStore = $attr['SecondaryStore'] ?? null;
 
         // SOH (Default)
         $sohDefault = $sumSOH($primaryJson ?? null);
@@ -730,14 +729,12 @@ class GetProductService implements UserOperationInterface
             $sohDefData
         );
 
-        dump($sohDefData,$soh,'default');
 
         $soh = LiveItemByLocation::updateOrCreate(
             ['icsc' => $icsc, 'warehouse' => $secondaryStore],
             $sohSecData
         );
 
-        dump($sohSecData, $soh,'secondary');
 
 
         // ✅ LOG
