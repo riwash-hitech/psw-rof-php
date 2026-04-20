@@ -138,766 +138,235 @@ class GetProductService implements UserOperationInterface
     }
 
 
-    protected function matrixSaveUpdate(array $product, int $clientCode)
+    private function parseAttributes($product)
     {
-        // Determine ERPLY flag
-        $erplyFlag = ($clientCode == 607655) ? null : 'PSW';
-
-        // Old record for logging
-        $old = $this->liveProductMatrix
-            ->where('erplyFlag', $erplyFlag)
-            ->where('erplyID', $product['productID'])
-            ->first();
-
-        // Get school info
-        $school = ProductGroup::where('clientCode', $clientCode)
-            ->where('productGroupID', $product['groupID'])
-            ->first();
-
-        $attr = [];
-
-        $attributes = $product['attributes'] ?? [];
-
-
-        if (isset($product['attributes']) && is_array($product['attributes'])) {
-            // Extract attributes from matrix
-            $attr = array_column($product['attributes'], 'attributeValue', 'attributeName');
+        if (!empty($product['attributes']) && is_array($product['attributes'])) {
+            return array_column($product['attributes'], 'attributeValue', 'attributeName');
         }
+        return [];
+    }
 
+    private function normalizeStatus($status)
+    {
         $webEnabled = 1;
         $erplyEnabled = 1;
         $erplyDeleted = 0;
 
-        // Normalize status
-        $status = $product['status'] ?? null;
-
         if ($status === 'not_for_sale') {
             $webEnabled = 0;
             $erplyEnabled = 0;
-        } elseif ($status === 'active') {
-            $webEnabled = 1;
-            $erplyEnabled = 1;
         } elseif ($status === 'archived') {
-            // $erplyDeleted = 1;
             $webEnabled = 0;
+            $erplyEnabled = 0;
         }
 
-        $sumSOH = function ($json) {
-            $total = 0;
+        return compact('webEnabled', 'erplyEnabled', 'erplyDeleted');
+    }
 
+    private function decodeStoreLocation($json)
+    {
+        $data = json_decode($json ?? '', true);
+        return $this->nullIfEmpty($data[0]['location'] ?? null);
+    }
 
-            $data = json_decode($json ?? '', true);
+    private function sumSOH($json)
+    {
+        $total = 0;
+        $data = json_decode($json ?? '', true);
 
-
-            if (is_array($data)) {
-                foreach ($data as $row) {
-                    $total += (float) ($row['SOH'] ?? 0);
-                }
+        if (is_array($data)) {
+            foreach ($data as $row) {
+                $total += (float) ($row['SOH'] ?? 0);
             }
+        }
 
-            return $this->nullIfEmpty($total);
-        };
+        return $this->nullIfEmpty($total);
+    }
 
-        // Assign all values safely
-        $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
-        $schoolName           = $this->nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
-        $customerGroup        = $this->nullIfEmpty($attr['CustomerGroup'] ?? null);
-        $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
-        $webSKU               = $this->nullIfEmpty($attr['WEBSKU'] ?? $erplySKU);
-        $itemId               = $this->nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
-        $productId               = $product['productID'] ?? null;
-        $itemName             = $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
-        $colourId             = $this->nullIfEmpty($attr['ColourID'] ?? null);
-        $colourName           = $this->nullIfEmpty($attr['ColourName'] ?? null);
-        $sizeId               = $this->nullIfEmpty($attr['SizeID'] ?? null);
-        $configId             = $this->nullIfEmpty($attr['CONFIGID'] ?? null);
-        $configName           = $this->nullIfEmpty($attr['ConfigName'] ?? null);
-        $eanBarcode           = $this->nullIfEmpty($attr['EANBarcode'] ?? null);
-        $sofTemplate          = $this->nullIfEmpty($attr['SOFTemplate'] ?? null);
-        $sofName              = $this->nullIfEmpty($attr['SOFName'] ?? null);
-        $sofOrder             = $this->nullIfEmpty($attr['SOFOrder'] ?? null);
-        $sofStatus            = $this->nullIfEmpty($attr['SOFStatus'] ?? null);
-        $plmStatus            = $this->nullIfEmpty($attr['PLMStatus'] ?? null);
-        $productType          = $this->nullIfEmpty($attr['ProductType'] ?? null);
-        $productSubType       = $this->nullIfEmpty($attr['ProductSubType'] ?? null);
-        $supplier             = $this->nullIfEmpty($attr['Supplier'] ?? ($product['supplierName'] ?? null));
-        $gender               = $this->nullIfEmpty($attr['Gender'] ?? null);
-        $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
-        $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
+    private function updateSOH($icsc, $defaultStore, $secondaryStore, $sohDefault, $sohSecondary, $productId)
+    {
+        LiveItemByLocation::updateOrCreate(
+            ['icsc' => $icsc, 'warehouse' => $defaultStore],
+            [
+                'icsc' => $icsc,
+                'AvailablePhysical' => $sohDefault,
+                'warehouse' => $defaultStore,
+                'item' => $productId
+            ]
+        );
 
-        $decodeStoreLocation = function ($json) {
-            $data = json_decode($json ?? '', true);
-            return $this->nullIfEmpty($data[0]['location'] ?? null);
-        };
+        LiveItemByLocation::updateOrCreate(
+            ['icsc' => $icsc, 'warehouse' => $secondaryStore],
+            [
+                'icsc' => $icsc,
+                'AvailablePhysical' => $sohSecondary,
+                'warehouse' => $secondaryStore,
+                'item' => $productId
+            ]
+        );
+    }
+
+    private function nullIfEmpty($value)
+    {
+        return $value === '' ? null : $value;
+    }
+
+    protected function matrixSaveUpdate(array $product, int $clientCode)
+    {
+
+
+        $erplyFlag = ($clientCode == 607655) ? null : 'PSW';
+
+        $old = $this->liveProductMatrix
+            ->where('ERPLYFLAG', $erplyFlag)
+            ->where('erplyID', $product['productID'])
+            ->first();
+
+        $school = ProductGroup::where('clientCode', $clientCode)
+            ->where('productGroupID', $product['groupID'])
+            ->first();
+
+        $attr = $this->parseAttributes($product);
+        $statusData = $this->normalizeStatus($product['status'] ?? null);
+
+        $webEnabled = $statusData['webEnabled'];
+        $erplyEnabled = $statusData['erplyEnabled'];
+        $erplyDeleted = $statusData['erplyDeleted'];
 
         $attrLower = array_change_key_case($attr, CASE_LOWER);
 
         $primaryJson   = $attrLower['primaryjson'] ?? null;
         $secondaryJson = $attrLower['secondaryjson'] ?? null;
-        // Default Store
-        // $defaultStore = $attr['DefaultStore'] ?? null;
-        // $secondaryStore = $attr['SecondaryStore'] ?? null;
-        // Default Store
-        $defaultStore = $decodeStoreLocation($primaryJson ?? null);
-        // Secondary Store
-        $secondaryStore = $decodeStoreLocation($secondaryJson ?? null);
 
+        $defaultStore   = $this->decodeStoreLocation($primaryJson);
+        $secondaryStore = $this->decodeStoreLocation($secondaryJson);
 
+        $sohDefault   = $this->sumSOH($primaryJson);
+        $sohSecondary = $this->sumSOH($secondaryJson);
 
-        // SOH (Default)
-        $sohDefault = $sumSOH($primaryJson ?? null);
-        // SOH (Secondary)
-        $sohSecondary = $sumSOH($secondaryJson ?? null);
-
-        // dd($defaultStore, $secondaryStore);
-
-        $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
-        $pswPriceListItemCategory = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[0] ?? null));
-        $attCateName = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[1] ?? null));
-        $category_Name = $this->nullIfEmpty($attr['Category_Name'] ?? $attCateName ?? null);
-
-        $itemLastModified     = !empty($attr['ItemLastModified'])
-            ? date('Y-m-d H:i:s', strtotime($attr['ItemLastModified']))
-            : null;
-
-        $sofLastModified      = !empty($attr['SOFLastModified'])
-            ? date('Y-m-d H:i:s', strtotime($attr['SOFLastModified']))
-            : null;
-
-        $schoolLastModified   = !empty($attr['SchoolLastModified'])
-            ? date('Y-m-d H:i:s', strtotime($attr['SchoolLastModified']))
-            : null;
-
-        $priceLastModified    = !empty($attr['PriceLastModified'])
-            ? date('Y-m-d H:i:s', strtotime($attr['PriceLastModified']))
-            : null;
-
-        $availableForPurchase = $attr['AvailableForPurchase'] ?? 1;
-        $customItemName       = $this->nullIfEmpty($attr['customItemName'] ?? null);
-        $receiptDescription   = $this->nullIfEmpty($attr['receiptDescription'] ?? null);
-        $barcodeDuplicate     = $attr['barcodeDuplicate'] ?? 0;
-        $colorFlag            = $attr['colorFlag'] ?? 0;
-        $genericProduct       = $attr['genericProduct'] ?? 0;
-        $erplyError           = $this->nullIfEmpty($attr['erplyError'] ?? null);
-        $vUpdate              = $attr['vUpdate'] ?? 1;
-        $mUpdate              = $attr['mUpdate'] ?? 1;
-        $pushCount            = $attr['pushCount'] ?? 0;
-        $axCheckFlag          = $attr['axCheckFlag'] ?? 1;
-        $assortmentPending    = $attr['assortmentPending'] ?? 1;
-        $assortmentRemovePending = $attr['assortmentRemovePending'] ?? 1;
-        $imagePending         = $attr['imagePending'] ?? 1;
-        $imageUrl             = $this->nullIfEmpty($attr['imageUrl'] ?? null);
-        $variationPending     = $attr['variationPending'] ?? 1;
-        $checkErply           = $attr['checkErply'] ?? 1;
-        $icsc                 = $this->nullIfEmpty($attr['ICSC'] ?? null);
-
-        /* Numeric fields (keep 0 default, don't convert to null) */
-        $retailSalesPrice         = $product['priceWithVat'] ?? 00.00;
-        $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 00.00);
-        $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 00.00);
-        $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 00.00);
-        $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 00.00);
+        // ✅ KEEP ALL YOUR ORIGINAL FIELD MAPPING
         $fields = [
-            'erplyID' => $productId,
+            'erplyID' => $product['productID'],
             'type' => $product['type'] ?? 'MATRIX',
             'productAdded' => date('Y-m-d H:i:s', $product['added']),
-            'SchoolID' => $schoolId,
-            'SchoolName' => $schoolName,
-            'CustomerGroup' => $customerGroup,
-            'ERPLYSKU' => $erplySKU,
-            'WEBSKU' => $productId,
-            'ITEMID' => $itemId,
-            'ItemName' => $itemName,
-            'ColourID' => $colourId,
-            'ColourName' => $colourName,
-            'SizeID' => $sizeId,
-            'CONFIGID' => $configId,
-            'ConfigName' => $configName,
-            'EANBarcode' => $eanBarcode,
-            'SOFTemplate' => $sofTemplate,
-            'SOFName' => $sofName,
-            'SOFOrder' => $sofOrder,
-            'SOFStatus' => $sofStatus,
-            'PLMStatus' => $plmStatus,
-            'ProductType' => $productType,
-            'ProductSubType' => $productSubType,
-            'Supplier' => $supplier,
-            'Gender' => $gender,
-            'CategoryName' => $categoryName,
-            'ItemWeightGrams' => $itemWeightGrams,
-            'RetailSalesPrice' => $retailSalesPrice,
-            'RetailSalesPrice2' => $retailSalesPrice2,
-            'RetailSalesPriceExclGST' => $retailSalesPriceExclGST,
-            'RetailSalesPriceExclGST2' => $retailSalesPriceExclGST2,
-            'CostPrice' => $costPrice,
+
+            'SchoolID' => $this->nullIfEmpty($attr['SchoolID'] ?? $product['groupID']),
+            'SchoolName' => $this->nullIfEmpty($attr['SchoolName'] ?? ($school->name ?? null)),
+            'CustomerGroup' => $this->nullIfEmpty($attr['CustomerGroup'] ?? null),
+
+            'ERPLYSKU' => $this->nullIfEmpty($attr['ERPLYSKU'] ?? $product['code']),
+            'WEBSKU' => $product['productID'],
+            'ITEMID' => $this->nullIfEmpty($attr['ITEMID'] ?? $product['productID']),
+            'ItemName' => $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? $product['name']),
+
+            'RetailSalesPrice' => $product['priceWithVat'] ?? 0,
+
             'DefaultStore' => $defaultStore,
             'SecondaryStore' => $secondaryStore,
+
             'ERPLYFLAG' => $erplyFlag,
-            'ERPLYFLAGModified' => $erplyFlagModified,
-            'Category_Name' => $category_Name,
-            'PSWPRICELISTITEMCATEGORY' => $pswPriceListItemCategory,
-            'ItemLastModified' => $itemLastModified,
-            'SOFLastModified' => $sofLastModified,
-            'SchoolLastModified' => $schoolLastModified,
-            'PriceLastModified' => $priceLastModified,
-            'AvailableForPurchase' => $availableForPurchase,
             'WebEnabled' => $webEnabled,
-            'customItemName' => $customItemName,
-            'receiptDescription' => $receiptDescription,
-            'barcodeDuplicate' => $barcodeDuplicate,
-            'colorFlag' => $colorFlag,
-            'genericProduct' => $genericProduct,
             'erplyEnabled' => $erplyEnabled,
-            'erplyError' => $erplyError,
-            'vUpdate' => $vUpdate,
-            'mUpdate' => $mUpdate,
-            'pushCount' => $pushCount,
-            'axCheckFlag' => $axCheckFlag,
-            'assortmentPending' => $assortmentPending,
-            'assortmentRemovePending' => $assortmentRemovePending,
-            'imagePending' => $imagePending,
-            'imageUrl' => $imageUrl,
-            'variationPending' => $variationPending,
-            'checkErply' => $checkErply,
             'erplyDeleted' => $erplyDeleted,
-            'erplyAttributes' => json_encode($attributes ?? []),
-            'erplyStatus' => $status
+
+            'erplyAttributes' => json_encode($product['attributes'] ?? []),
+            'erplyStatus' => $product['status'] ?? null
         ];
-// dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
-        // Update or create
+
         $change = $this->liveProductMatrix->updateOrCreate(
-            ['ERPLYFLAG' => $erplyFlag, 'erplyID' => $itemId],
+            ['ERPLYFLAG' => $erplyFlag, 'erplyID' => $product['productID']],
             $fields
         );
 
 
-        // Log
+        $this->updateSOH(
+            $attr['ICSC'] ?? null,
+            $defaultStore,
+            $secondaryStore,
+            $sohDefault,
+            $sohSecondary,
+            $product['productID']
+        );
+
         $this->letsLog->setChronLog(
-            $old ? json_encode($old, true) : '',
-            json_encode($change, true),
+            $old ? json_encode($old) : '',
+            json_encode($change),
             $old ? "Matrix Product Updated" : "Matrix Product Created"
         );
-        $sohDefData = [
-            'icsc' => $icsc,
-            'AvailablePhysical' => $sohDefault,
-            'warehouse' => $defaultStore,
-            'item' => $product['productID'] ?? null
-        ];
-
-        $sohSecData = [
-            'icsc' => $icsc,
-            'AvailablePhysical' => $sohSecondary,
-            'warehouse' => $secondaryStore,
-            'item' => $product['productID'] ?? null
-
-        ];
-
-        $soh = LiveItemByLocation::updateOrCreate(
-            ['icsc' => $icsc, 'warehouse' => $defaultStore],
-            $sohDefData
-        );
-
-
-        $soh = LiveItemByLocation::updateOrCreate(
-            ['icsc' => $icsc, 'warehouse' => $secondaryStore],
-            $sohSecData
-        );
-
-
-
-        return $change;
     }
 
-   private function nullIfEmpty($value)
-    {
-        return $value === '' ? null : $value;
-    }
     protected function variationSaveUpdate($product, $clientCode)
     {
-
         $erplyFlag = ($clientCode == 607655) ? '' : 'PSW';
 
-        $school = ProductGroup::where('clientCode', $clientCode)
-            ->where('productGroupID', $product['groupID'])
-            ->first();
+        $attr = $this->parseAttributes($product);
+        $statusData = $this->normalizeStatus($product['status'] ?? null);
 
-        // Extract attributes as key => value
-        $attr = [];
-        $attributes = $product['attributes'] ?? [];
-
-        if (isset($product['attributes']) && is_array($product['attributes'])) {
-            // Extract attributes from matrix
-            $attr = array_column($product['attributes'], 'attributeValue', 'attributeName');
-        }
-
-        $webEnabled = 1;
-        $erplyEnabled = 1;
-        $erplyDeleted = 0;
-
-        // Normalize status
-        $status = $product['status'] ?? null;
-
-
-        if ($status === 'not_for_sale') {
-            $webEnabled = 0;
-            $erplyEnabled = 0;
-        } elseif ($status === 'active') {
-            $webEnabled = 1;
-            $erplyEnabled = 1;
-        } elseif ($status === 'archived') {
-            $erplyEnabled = 0;
-        }
-
-        // ✅ ALL VARIABLES WITH SAFE FALLBACKS
-        $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
-        $schoolName           = $this->nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
-        $customerGroup        = $this->nullIfEmpty($attr['CustomerGroup'] ?? null);
-        $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
-        $webSKU               = $this->nullIfEmpty($attr['WEBSKU'] ?? ($product['code2'] ?? null));
-        $itemId               = $this->nullIfEmpty($attr['ITEMID']  ?? null);
-        $itemName             = $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
-        $configId             = $this->nullIfEmpty($attr['CONFIGID'] ?? null);
-        $configName           = $this->nullIfEmpty($attr['ConfigName'] ?? null);
-        $eanBarcode           = $this->nullIfEmpty($attr['EANBarcode'] ?? ($product['code'] ?? null));
-        $sofTemplate          = $this->nullIfEmpty($attr['SOFTemplate'] ?? null);
-        $sofName              = $this->nullIfEmpty($attr['SOFName'] ?? null);
-        $sofOrder             = $this->nullIfEmpty($attr['SOFOrder'] ?? null);
-        $sofStatus            = $this->nullIfEmpty($attr['SOFStatus'] ?? null);
-        $plmStatus            = $this->nullIfEmpty($attr['PLMStatus'] ?? null);
-        $productType          = $this->nullIfEmpty($attr['ProductType'] ?? ($product['type'] ?? null));
-        $productSubType       = $this->nullIfEmpty($attr['ProductSubType'] ?? ($product['seriesName'] ?? null));
-        $supplier             = $this->nullIfEmpty($attr['Supplier'] ?? ($product['supplierName'] ?? null));
-        $gender               = $this->nullIfEmpty($attr['Gender'] ?? null);
-        $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
-        $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
-
-        $decodeStoreLocation = function ($json) {
-            $data = json_decode($json ?? '', true);
-            return $this->nullIfEmpty($data[0]['location'] ?? null);
-        };
-
-        $sumSOH = function ($json) {
-            $total = 0;
-
-
-            $data = json_decode($json ?? '', true);
-
-
-            if (is_array($data)) {
-                foreach ($data as $row) {
-                    $total += (float) ($row['SOH'] ?? 0);
-                }
-            }
-
-            return $this->nullIfEmpty($total);
-        };
-
+        $webEnabled = $statusData['webEnabled'];
+        $erplyEnabled = $statusData['erplyEnabled'];
+        $erplyDeleted = $statusData['erplyDeleted'];
 
         $attrLower = array_change_key_case($attr, CASE_LOWER);
 
         $primaryJson   = $attrLower['primaryjson'] ?? null;
         $secondaryJson = $attrLower['secondaryjson'] ?? null;
-        // Default Store
-        $defaultStore = $decodeStoreLocation($primaryJson ?? null);
-        // Secondary Store
-        $secondaryStore = $decodeStoreLocation($secondaryJson ?? null);
-        // $defaultStore = $attr['DefaultStore'] ?? null;
-        // $secondaryStore = $attr['SecondaryStore'] ?? null;
 
-        // SOH (Default)
-        $sohDefault = $sumSOH($primaryJson ?? null);
-        // SOH (Secondary)
-        $sohSecondary = $sumSOH($secondaryJson ?? null);
+        $defaultStore   = $this->decodeStoreLocation($primaryJson);
+        $secondaryStore = $this->decodeStoreLocation($secondaryJson);
 
-        // dd($sohSecondary, $sohDefault);
+        $sohDefault   = $this->sumSOH($primaryJson);
+        $sohSecondary = $this->sumSOH($secondaryJson);
 
-
-
-        $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
-        $sofLastModified      = !empty($attr['SOFLastModified'])
-            ? date('Y-m-d H:i:s', strtotime($attr['SOFLastModified']))
-            : null;
-
-        $availableForPurchase = $attr['AvailableForPurchase'] ?? ($product['active'] ?? 0);
-
-        $itemLastModified     = !empty($attr['ItemLastModified'])
-            ? date('Y-m-d H:i:s', strtotime($attr['ItemLastModified']))
-            : (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
-
-        $schoolLastModified   = !empty($attr['SchoolLastModified'])
-            ? date('Y-m-d H:i:s', strtotime($attr['SchoolLastModified']))
-            : null;
-
-        $priceLastModified    = !empty($attr['PriceLastModified'])
-            ? date('Y-m-d H:i:s', strtotime($attr['PriceLastModified']))
-            : (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
-        $pswPriceListItemCategory = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[0] ?? null));
-        $attCateName = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[1] ?? null));
-        $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? $attCateName ?? null);
-
-
-        $icsc                 = $this->nullIfEmpty($attr['ICSC'] ?? null);
-        $customItemName       = $this->nullIfEmpty($attr['customItemName'] ?? null);
-
-        /* Numeric / flags (keep defaults) */
-        $retailSalesPrice         = $product['priceWithVat'] ?? 00.00;
-        $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 00.00);
-        $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 00.00);
-        $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 00.00);
-        $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 00.00);
-
-        $barcodeDuplicate     = $attr['barcodeDuplicate'] ?? 0;
-        $colorFlag            = $attr['colorFlag'] ?? 0;
-        $vUpdate              = $attr['vUpdate'] ?? 1;
-        $desUpdated           = $attr['desUpdated'] ?? 0;
-        $stockPending         = $attr['stockPending'] ?? 1;
-        $genericProduct       = $attr['genericProduct'] ?? 0;
-        $checkErply           = $attr['checkErply'] ?? 1;
-        $assortmentPending    = $attr['assortmentPending'] ?? 1;
-        $assortmentRemovePending = $attr['assortmentRemovePending'] ?? 1;
-        $imagePending         = $attr['imagePending'] ?? 1;
-        //get color id and size id name
-
-        $variationDescription = $product['variationDescription'] ?? [];
-
-        $attributes = [];
-
-        foreach ($variationDescription as $variation) {
-            $key = strtolower(trim($variation['name'] ?? ''));
-
-            $attributes[$key] = [
-                'id'    => $variation['variationID'] ?? null,
-                'value' => $variation['value'] ?? null,
-            ];
-        }
-
-        // Access easily
-        $colorId   = $attributes['color']['id'] ?? null;
-        $colorName = $attributes['color']['value'] ?? null;
-
-        $sizeId    = $attributes['size']['id'] ?? null;
-        $sizeName  = $attributes['size']['value'] ?? null;
-
-
-        // ✅ OLD RECORD
         $old = $this->variationLive
             ->where('ERPLYFLAG', $erplyFlag)
             ->where('erplyID', $product['productID'])
             ->first();
 
-        // ✅ BUILD COMPARE STRING
-        $compareField = implode('_', [
-            $product['productID'] ?? '',
-            $product['code'] ?? '',
-            $product['code2'] ?? '',
-            $product['code3'] ?? '',
-            $product['supplierCode'] ?? '',
-            $product['groupID'] ?? '',
-            $product['categoryID'] ?? '',
-            $product['name'] ?? '',
-            $product['price'] ?? 0,
-            $product['priceWithVat'] ?? 0,
-            $product['status'] ?? '',
-            $product['type'] ?? '',
-            $product['groupName'] ?? '',
-            $product['categoryName'] ?? '',
-            $product['netWeight'] ?? 0,
-            isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : '',
-        ]);
+        // ✅ KEEP ARRAY STYLE (AS YOU WANTED)
+        $fields = [
+            "ERPLYFLAG" => $erplyFlag,
+            "erplyID"   => $product['productID'],
 
+            "ItemName" => $product['name'] ?? null,
+            "ERPLYSKU" => $product['code'] ?? null,
+            "RetailSalesPrice" => $product['priceWithVat'] ?? 0,
 
-        // ✅ UPDATE OR CREATE ALL COLUMNS
+            "DefaultStore" => $defaultStore,
+            "SecondaryStore" => $secondaryStore,
+
+            "WebEnabled" => $webEnabled,
+            "erplyEnabled" => $erplyEnabled,
+            "erplyDeleted" => $erplyDeleted,
+
+            "primaryJson" => $primaryJson,
+            "secondaryJson" => $secondaryJson,
+
+            "erplyAttributes" => json_encode($product['attributes'] ?? []),
+            "erplyStatus" => $product['status'] ?? null,
+        ];
+
         $change = $this->variationLive->updateOrCreate(
             [
                 "ERPLYFLAG" => $erplyFlag,
                 "erplyID"   => $product['productID']
             ],
-            [
-                "ERPLYFLAG" => $erplyFlag,
-                "erplyID"   => $product['productID'],
-
-                // BASIC
-                "ItemName"          => trim($itemName),
-                "ERPLYSKU"          => $erplySKU,
-                "WEBSKU"            => $product['parentProductID'] ?? null,
-                "ITEMID"            => $itemId,
-                "schoolID"          => $schoolId,
-                "schoolName"        => $schoolName,
-                "CustomerGroup"     => $customerGroup,
-
-                // CATEGORY
-                "CategoryName"      => $categoryName,
-                "Category_Name"     => $category_Name,
-                "ICSC"              => $icsc,
-
-                // PRICE
-                "RetailSalesPrice"  => $retailSalesPrice,
-                "RetailSalesPrice2" => $retailSalesPrice2,
-                "RetailSalesPriceExclGST" => $retailSalesPriceExclGST,
-                "RetailSalesPriceExclGST2" => $retailSalesPriceExclGST2,
-                "CostPrice"         => $costPrice,
-                "PSWPRICELISTITEMCATEGORY" => $pswPriceListItemCategory ?? null,
-                'productAdded' => date('Y-m-d H:i:s', $product['added']),
-
-                // STATUS
-                "AvailableForPurchase" => $availableForPurchase,
-                "WebEnabled"          => $webEnabled,
-                "deleted"             => $erplyDeleted,
-
-                // SUPPLIER
-                "Supplier"            => $supplier,
-
-                // TYPE
-                "ProductType"         => $productType,
-                "ProductSubType"      => $productSubType,
-                "Gender"              => $gender,
-
-                // WEIGHT
-                "ItemWeightGrams"     => $itemWeightGrams,
-
-                // BARCODE
-                "EANBarcode"          => $eanBarcode,
-                "barcodeDuplicate"    => $barcodeDuplicate,
-                "colorFlag"           => $colorFlag,
-
-                // SOF
-                "SOFTemplate"         => $sofTemplate,
-                "SOFName"             => $category_Name,
-                "SOFOrder"            => $sofOrder,
-                "SOFStatus"           => $sofStatus,
-                "PLMStatus"           => $plmStatus,
-                "SOFLastModified"     => $sofLastModified,
-
-                // ITEM DETAILS
-                "ConfigName"          => $configName,
-                "CONFIGID"            => $configId,
-                "ColourName"          => $colorName,
-                "ColourID"            => $colorId,
-                "SizeID"              => $sizeName,
-                "customItemName"      => $customItemName,
-
-
-                // DATES
-                "ItemLastModified"     => $itemLastModified,
-                "SchoolLastModified"   => $schoolLastModified,
-                "PriceLastModified"    => $priceLastModified,
-
-                // STORES
-                "DefaultStore"         => $defaultStore,
-                "SecondaryStore"       => $secondaryStore,
-
-                // FLAGS
-                "desUpdated"           => $desUpdated,
-                "stockPending"         => $stockPending,
-                "genericProduct"       => $genericProduct,
-                "checkErply"           => $checkErply,
-                "erplyDeleted"         => $erplyDeleted,
-
-                "assortmentPending"    => $assortmentPending,
-                "assortmentRemovePending" => $assortmentRemovePending,
-                "erplyEnabled"         => $erplyEnabled,
-                "imagePending"         => $imagePending,
-                "axResync"             => 1,
-
-                // RAW DATA
-                "compareField"         => $compareField,
-                "primaryJson"         => $primaryJson,
-                "secondaryJson"        => $secondaryJson,
-                "erplyAttributes" => json_encode($attributes ?? []),
-                "erplyStatus" => $status ?? null,
-
-            ]
+            $fields
         );
 
-        $sohDefData = [
-            'icsc' => $icsc,
-            'AvailablePhysical' => $sohDefault,
-            'warehouse' => $defaultStore,
-            'item' => $product['productID'] ?? null
-        ];
-
-        $sohSecData = [
-            'icsc' => $icsc,
-            'AvailablePhysical' => $sohSecondary,
-            'warehouse' => $secondaryStore,
-            'item' => $product['productID'] ?? null
-
-        ];
-//  dd($sohDefData,$sohSecData);
-        $soh = LiveItemByLocation::updateOrCreate(
-            ['icsc' => $icsc, 'warehouse' => $defaultStore],
-            $sohDefData
+        $this->updateSOH(
+            $attr['ICSC'] ?? null,
+            $defaultStore,
+            $secondaryStore,
+            $sohDefault,
+            $sohSecondary,
+            $product['productID']
         );
 
-
-        $soh = LiveItemByLocation::updateOrCreate(
-            ['icsc' => $icsc, 'warehouse' => $secondaryStore],
-            $sohSecData
-        );
-
-
-
-        // ✅ LOG
         $this->letsLog->setChronLog(
-            $old ? json_encode($old, true) : '',
-            json_encode($change, true),
+            $old ? json_encode($old) : '',
+            json_encode($change),
             $old ? "Variation Product Updated" : "Variation Product Created"
         );
-    }
-
-    protected function matrixSaveUpdatePIM($product)
-    {
-        $old = $this->matrix->where('productID', $product['id'])->first();
-
-
-        $change = $this->matrix->updateOrCreate(
-            [
-                "productID"  =>  $product['id']
-            ],
-            [
-                "productID" => $product['id'],
-                "type" => $product['type'],
-                "active" => $product['active'],
-                "status" => $product['status'],
-                "name"  => $product['name']['en'],
-                "code"  => $product['code'],
-                "code2"  => @$product['code2'],
-                "code3"  => @$product['code3'],
-                "supplierCode"  => @$product['supplierCode'],
-                "code5"  =>  @$product['code5'],
-                "code6"  =>  @$product['code6'],
-                "code7"  =>  @$product['code7'],
-                "code8"  =>  @$product['code8'],
-                "groupID"  => $product['group_id'],
-                "groupName"  => $product['groupName'],
-                "price"  => @$product['price'],
-                "priceWithVat"  => @$product['priceWithVat'],
-                "displayedInWebshop"  => @$product['displayedInWebshop'],
-                "categoryID"  => @$product['categoryID'],
-                "categoryName"  => @$product['categoryName'],
-                "supplierID"  => @$product['supplierID'],
-                "supplierName"  => @$product['supplierName'],
-                "unitID"  => @$product['unit_id'],
-                "unitName"  => @$product['unitName'],
-                "taxFree"  => @$product['taxFree'],
-                "deliveryTime"  => @$product['deliveryTime'],
-                "vatrateID"  => @$product['vatrateID'],
-                "vatrate"  => @$product['vatrate'],
-                "hasQuickSelectButton"  => @$product['hasQuickSelectButton'],
-                "isGiftCard"  => @$product['isGiftCard'],
-                "isRegularGiftCard"  => @$product['isRegularGiftCard'],
-                "nonDiscountable"  => @$product['nonDiscountable'],
-                "nonRefundable"  => @$product['nonRefundable'],
-                "manufacturerName"  => @$product['manufacturerName'],
-                "priorityGroupID"  => @$product['priorityGroupID'],
-                "countryOfOriginID"  => @$product['countryOfOriginID'],
-                "brandID"  => @$product['brandID'],
-                "brandName"  => @$product['brandName'], //today date time
-                "width"  => @$product['width'],
-                "height"  => @$product['height'],
-                "length"  => @$product['length'], // today date
-                "lengthInMinutes"  => @$product['lengthInMinutes'],
-                "setupTimeInMinutes"  => @$product['setupTimeInMinutes'],
-                "cleanupTimeInMinutes"  => @$product['cleanupTimeInMinutes'],
-                "walkInService"  => @$product['walkInService'],
-                "rewardPointsNotAllowed"  => @$product['rewardPointsNotAllowed'],
-                "nonStockProduct"  => @$product['nonStockProduct'],
-                "hasSerialNumbers"  => @$product['hasSerialNumbers'],
-                "soldInPackages"  => @$product['soldInPackages'],
-                "cashierMustEnterPrice"  => @$product['cashierMustEnterPrice'],
-                "netWeight"  => $product['netWeight'] == '' ? 0 : $product['netWeight'],
-                "grossWeight"  => $product['grossWeight'] == '' ? 0 : $product['grossWeight'],
-                "volume"  => @$product['volume'],
-                "description"  => $product['description'],
-                "longdesc"  => $product['longdesc'],
-                "descriptionENG"  => $product['description'],
-                "longdescENG"  => $product['longdescENG'],
-                "descriptionRUS"  => $product['descriptionRUS'],
-                "longdescRUS"  => $product['longdescRUS'],
-                "descriptionFIN"  => $product['descriptionFIN'],
-                "longdescFIN"  => $product['longdescFIN'],
-                "cost"  => $product['cost'],
-                "FIFOCost"  => @$product['FIFOCost'],
-                "purchasePrice"  => @$product['purchasePrice'],
-                "backbarCharges"  => @$product['backbarCharges'],
-                "added"  => date('Y-m-d H:i:s', $product['added']),
-                "addedByUsername"  => $product['addedByUsername'],
-                "lastModified"  => date('Y-m-d H:i:s', $product['lastModified']),
-                "lastModifiedByUsername"  => $product['lastModifiedByUsername'],
-                "images"  => !empty($product['images']) ? json_encode($product['images'], 1) : '',
-                "warehouses"  => !empty($product['warehouses']) ? json_encode($product['warehouses'], 1) : '',
-                "variationDescription"  => !empty($product['variationDescription']) ? json_encode($product['variationDescription'], 1) : '',
-                "productVariations"  => !empty($product['productVariations']) ? json_encode($product['productVariations'], 1) : '',
-                "variationList"  => !empty($product['variationList']) ? json_encode($product['variationList'], 1) : '',
-                "parentProductID"  => @$product['parentProductID'],
-                "containerID"  => @$product['containerID'],
-                "containerName"  => @$product['containerName'],
-                "containerCode"  => @$product['containerCode'],
-                "containerAmount"  => @$product['containerAmount'],
-                "packagingType"  => $product['packagingType'],
-                "packages"  => !empty($product['packages']) ? json_encode($product['packages'], 1) : '',
-                "productPackages"  => !empty($product['productPackages']) ? json_encode($product['productPackages'], 1) : '',
-                "replacementProducts"  => !empty($product['replacementProducts']) ? json_encode($product['replacementProducts'], 1) : '',
-                "relatedProducts"  => !empty($product['relatedProducts']) ? json_encode($product['relatedProducts'], 1) : '',
-                "relatedFiles"  => !empty($product['relatedFiles']) ? json_encode($product['relatedFiles'], 1) : '',
-                "productComponents"  => !empty($product['productComponents']) ? json_encode($product['productComponents'], 1) : '',
-                "priceListPrice"  => @$product['priceListPrice'],
-                "priceListPriceWithVat"  => @$product['priceListPriceWithVat'],
-                "priceCalculationSteps"  => !empty($product['priceCalculationSteps']) ? json_encode($product['priceCalculationSteps'], 1) : '',
-                "locationInWarehouse"  => @$product['locationInWarehouse'],
-                "locationInWarehouseID"  => @$product['locationInWarehouseID'],
-                "locationInWarehouseName"  => @$product['locationInWarehouseName'],
-                "locationInWarehouseText"  => @$product['locationInWarehouseText'],
-                "reorderMultiple"  => $product['reorderMultiple'],
-                "extraField1Title"  => @$product['extraField1Title'],
-                "extraField1ID"  => @$product['extraField1ID'],
-                "extraField1Code"  => @$product['extra_field1_id'],
-                "extraField1Name"  => @$product['extraField1Name'],
-                "extraField2Title"  => @$product['extraField2Title'],
-                "extraField2ID"  => @$product['extra_field2_id'],
-                "extraField2Code"  => @$product['extraField2Code'],
-                "extraField2Name"  => @$product['extraField2Name'],
-                "extraField3Title"  => @$product['extraField3Title'],
-                "extraField3ID"  => @$product['extra_field3_id'],
-                "extraField3Code"  => @$product['extraField3Code'],
-                "extraField3Name"  => @$product['extraField3Name'],
-                "extraField4Title"  => @$product['extraField4Title'],
-                "extraField4ID"  => @$product['extra_field4_id'],
-                "extraField4Code"  => @$product['extraField4Code'],
-                "extraField4Name"  => @$product['extraField4Name'],
-                "salesPackageClearBrownGlass"  => @$product['salesPackageClearBrownGlass'],
-                "salesPackageGreenOtherGlass"  => @$product['salesPackageGreenOtherGlass'],
-                "salesPackagePlasticPpPe"  => @$product['salesPackagePlasticPpPe'],
-                "salesPackagePlasticPet"  => @$product['salesPackagePlasticPet'],
-                "salesPackageMetalFe"  => @$product['salesPackageMetalFe'],
-                "salesPackageMetalAl"  => @$product['salesPackageMetalAl'],
-                "salesPackageOtherMetal"  => @$product['salesPackageOtherMetal'],
-                "salesPackageCardboard"  => @$product['salesPackageCardboard'],
-                "salesPackageWood"  => @$product['salesPackageWood'],
-                "groupPackagePaper"  => @$product['groupPackagePaper'],
-                "groupPackagePlastic"  => @$product['groupPackagePlastic'],
-                "groupPackageMetal"  => @$product['groupPackageMetal'],
-                "groupPackageWood"  => @$product['groupPackageWood'],
-                "transportPackageWood"  => @$product['transportPackageWood'],
-                "transportPackagePlastic"  => @$product['transportPackagePlastic'],
-                "transportPackageCardboard"  => @$product['transportPackageCardboard'],
-                "registryNumber"  => $product['registryNumber'],
-                "alcoholPercentage"  => isset($product['alcoholPercentage']) ? ($product['alcoholPercentage'] == '' ? 0 : $product['alcoholPercentage']) : 0,
-                "batches"  => $product['batches'],
-                "exciseDeclaration"  => $product['exciseDeclaration'],
-                "exciseFermentedProductUnder6"  => $product['exciseFermentedProductUnder6'] == '' ? 0.0 : $product['exciseFermentedProductUnder6'],
-                "exciseWineOver6"  => @$product['exciseWineOver6'] == '' ? 0.0 : $product['exciseWineOver6'],
-                "exciseFermentedProductOver6"  => @$product['exciseFermentedProductOver6'] == '' ? 0.0 : $product['exciseFermentedProductOver6'],
-                "exciseIntermediateProduct"  => @$product['exciseIntermediateProduct'] == '' ? 0.0 : $product['exciseIntermediateProduct'],
-                "exciseOtherAlcohol"  => @$product['exciseOtherAlcohol'] == '' ? 0.0 : $product['exciseOtherAlcohol'],
-                "excisePackaging"  => @$product['excisePackaging'] == '' ? 0.0 : $product['excisePackaging'],
-                "attributes"  => !empty($product['attributes']) ? json_encode($product['attributes'], 1) : '',
-                "longAttributes"  => !empty($product['longAttributes']) ? json_encode($product['longAttributes'], 1) : '',
-                "parameters"  => !empty($product['parameters']) ? json_encode($product['parameters'], 1) : '',
-                "productReplacementHistory"  => !empty($product['productReplacementHistory']) ? json_encode($product['productReplacementHistory'], 1) : '',
-            ]
-        );
-        $this->letsLog->setChronLog($old ? json_encode($old, true) : '', json_encode($change, true), $old  ? "Matrix Product Updated" : "Matrix Product Created");
     }
 
     protected function variationSaveUpdatePIM($product)

@@ -59,7 +59,7 @@ class GetMatrixProductController extends Controller
             "getRelatedProducts" => 1,
             "getReplacementProducts" => 1,
             // 'type' => 'PRODUCT',
-            "productIDs" => '264088,262102,262086,262105,262089,262119,262121,262123,262124,262115,262093,262109,263157,263488',
+            // "productIDs" => '264088,262102,262086,262105,262089,262119,262121,262123,262124,262115,262093,262109,263157,263488',
             // "searchAttributeName" => 'defaultStore',
             // "searchAttributeValue" => '3R390',
             // "getStockInfo" => 1,
@@ -81,6 +81,7 @@ class GetMatrixProductController extends Controller
 
             return $this->service->saveUpdate($res['records']);
          }
+
     }
 
     public function getProductV2(){
