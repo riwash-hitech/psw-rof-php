@@ -6,7 +6,7 @@ use App\Classes\UserLogger;
 use App\Contracts\UserOperationInterface;
 use App\Http\Controllers\Services\EAPIService;
 use App\Models\PAEI\{MatrixProduct, ProductGroup, Supplier, TempDate, UserOperationLog, VariationProduct, Warehouse};
-use App\Models\PswClientLive\Local\{LiveProductMatrix, LiveProductVariation};
+use App\Models\PswClientLive\Local\{LiveItemByLocation, LiveProductMatrix, LiveProductVariation};
 use App\Traits\UserOperationTrait;
 
 class GetProductService implements UserOperationInterface
@@ -156,6 +156,9 @@ class GetProductService implements UserOperationInterface
 
         $attr = [];
 
+        $attributes = $product['attributes'] ?? [];
+
+
         if (isset($product['attributes']) && is_array($product['attributes'])) {
             // Extract attributes from matrix
             $attr = array_column($product['attributes'], 'attributeValue', 'attributeName');
@@ -166,7 +169,7 @@ class GetProductService implements UserOperationInterface
         $erplyDeleted = 0;
 
         // Normalize status
-        $status = strtolower($attr['status'] ?? '');
+        $status = $product['status'] ?? null;
 
         if ($status === 'not_for_sale') {
             $webEnabled = 0;
@@ -175,8 +178,25 @@ class GetProductService implements UserOperationInterface
             $webEnabled = 1;
             $erplyEnabled = 1;
         } elseif ($status === 'archived') {
-            $erplyDeleted = 1;
+            // $erplyDeleted = 1;
+            $webEnabled = 0;
         }
+
+        $sumSOH = function ($json) {
+            $total = 0;
+
+
+            $data = json_decode($json ?? '', true);
+
+
+            if (is_array($data)) {
+                foreach ($data as $row) {
+                    $total += (float) ($row['SOH'] ?? 0);
+                }
+            }
+
+            return $this->nullIfEmpty($total);
+        };
 
         // Assign all values safely
         $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
@@ -185,6 +205,7 @@ class GetProductService implements UserOperationInterface
         $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
         $webSKU               = $this->nullIfEmpty($attr['WEBSKU'] ?? $erplySKU);
         $itemId               = $this->nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
+        $productId               = $product['productID'] ?? null;
         $itemName             = $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
         $colourId             = $this->nullIfEmpty($attr['ColourID'] ?? null);
         $colourName           = $this->nullIfEmpty($attr['ColourName'] ?? null);
@@ -203,11 +224,37 @@ class GetProductService implements UserOperationInterface
         $gender               = $this->nullIfEmpty($attr['Gender'] ?? null);
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
-        $defaultStore         = $this->nullIfEmpty($attr['DefaultStore'] ?? null);
-        $secondaryStore       = $this->nullIfEmpty($attr['SecondaryStore'] ?? null);
+
+        $decodeStoreLocation = function ($json) {
+            $data = json_decode($json ?? '', true);
+            return $this->nullIfEmpty($data[0]['location'] ?? null);
+        };
+
+        $attrLower = array_change_key_case($attr, CASE_LOWER);
+
+        $primaryJson   = $attrLower['primaryjson'] ?? null;
+        $secondaryJson = $attrLower['secondaryjson'] ?? null;
+        // Default Store
+        // $defaultStore = $attr['DefaultStore'] ?? null;
+        // $secondaryStore = $attr['SecondaryStore'] ?? null;
+        // Default Store
+        $defaultStore = $decodeStoreLocation($primaryJson ?? null);
+        // Secondary Store
+        $secondaryStore = $decodeStoreLocation($secondaryJson ?? null);
+
+
+
+        // SOH (Default)
+        $sohDefault = $sumSOH($primaryJson ?? null);
+        // SOH (Secondary)
+        $sohSecondary = $sumSOH($secondaryJson ?? null);
+
+        // dd($defaultStore, $secondaryStore);
+
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
-        $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? null);
-        $pswPriceListItemCategory = $this->nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
+        $pswPriceListItemCategory = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[0] ?? null));
+        $attCateName = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[1] ?? null));
+        $category_Name = $this->nullIfEmpty($attr['Category_Name'] ?? $attCateName ?? null);
 
         $itemLastModified     = !empty($attr['ItemLastModified'])
             ? date('Y-m-d H:i:s', strtotime($attr['ItemLastModified']))
@@ -242,22 +289,23 @@ class GetProductService implements UserOperationInterface
         $imageUrl             = $this->nullIfEmpty($attr['imageUrl'] ?? null);
         $variationPending     = $attr['variationPending'] ?? 1;
         $checkErply           = $attr['checkErply'] ?? 1;
+        $icsc                 = $this->nullIfEmpty($attr['ICSC'] ?? null);
 
         /* Numeric fields (keep 0 default, don't convert to null) */
-        $retailSalesPrice         = $this->nullIfEmpty($attr['RetailSalesPrice'] ?? 0);
-        $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 0);
-        $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 0);
-        $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 0);
-        $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 0);
+        $retailSalesPrice         = $product['priceWithVat'] ?? 00.00;
+        $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 00.00);
+        $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 00.00);
+        $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 00.00);
+        $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 00.00);
         $fields = [
-            'erplyID' => $itemId,
+            'erplyID' => $productId,
             'type' => $product['type'] ?? 'MATRIX',
             'productAdded' => date('Y-m-d H:i:s', $product['added']),
             'SchoolID' => $schoolId,
             'SchoolName' => $schoolName,
             'CustomerGroup' => $customerGroup,
             'ERPLYSKU' => $erplySKU,
-            'WEBSKU' => $webSKU,
+            'WEBSKU' => $productId,
             'ITEMID' => $itemId,
             'ItemName' => $itemName,
             'ColourID' => $colourId,
@@ -311,10 +359,10 @@ class GetProductService implements UserOperationInterface
             'imageUrl' => $imageUrl,
             'variationPending' => $variationPending,
             'checkErply' => $checkErply,
-            'erplyDeleted' => $erplyDeleted
+            'erplyDeleted' => $erplyDeleted,
+            'erplyAttributes' => json_encode($attributes ?? []),
+            'erplyStatus' => $status
         ];
-
-        // dd($fields);
 // dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
         // Update or create
         $change = $this->liveProductMatrix->updateOrCreate(
@@ -322,12 +370,39 @@ class GetProductService implements UserOperationInterface
             $fields
         );
 
+
         // Log
         $this->letsLog->setChronLog(
             $old ? json_encode($old, true) : '',
             json_encode($change, true),
             $old ? "Matrix Product Updated" : "Matrix Product Created"
         );
+        $sohDefData = [
+            'icsc' => $icsc,
+            'AvailablePhysical' => $sohDefault,
+            'warehouse' => $defaultStore,
+            'item' => $product['productID'] ?? null
+        ];
+
+        $sohSecData = [
+            'icsc' => $icsc,
+            'AvailablePhysical' => $sohSecondary,
+            'warehouse' => $secondaryStore,
+            'item' => $product['productID'] ?? null
+
+        ];
+
+        $soh = LiveItemByLocation::updateOrCreate(
+            ['icsc' => $icsc, 'warehouse' => $defaultStore],
+            $sohDefData
+        );
+
+
+        $soh = LiveItemByLocation::updateOrCreate(
+            ['icsc' => $icsc, 'warehouse' => $secondaryStore],
+            $sohSecData
+        );
+
 
 
         return $change;
@@ -348,6 +423,7 @@ class GetProductService implements UserOperationInterface
 
         // Extract attributes as key => value
         $attr = [];
+        $attributes = $product['attributes'] ?? [];
 
         if (isset($product['attributes']) && is_array($product['attributes'])) {
             // Extract attributes from matrix
@@ -359,7 +435,8 @@ class GetProductService implements UserOperationInterface
         $erplyDeleted = 0;
 
         // Normalize status
-        $status = strtolower($attr['status'] ?? '');
+        $status = $product['status'] ?? null;
+
 
         if ($status === 'not_for_sale') {
             $webEnabled = 0;
@@ -368,7 +445,7 @@ class GetProductService implements UserOperationInterface
             $webEnabled = 1;
             $erplyEnabled = 1;
         } elseif ($status === 'archived') {
-            $erplyDeleted = 1;
+            $erplyEnabled = 0;
         }
 
         // ✅ ALL VARIABLES WITH SAFE FALLBACKS
@@ -377,11 +454,8 @@ class GetProductService implements UserOperationInterface
         $customerGroup        = $this->nullIfEmpty($attr['CustomerGroup'] ?? null);
         $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
         $webSKU               = $this->nullIfEmpty($attr['WEBSKU'] ?? ($product['code2'] ?? null));
-        $itemId               = $this->nullIfEmpty($attr['ITEMID'] ?? ($product['productID'] ?? null));
+        $itemId               = $this->nullIfEmpty($attr['ITEMID']  ?? null);
         $itemName             = $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
-        $colourId             = $this->nullIfEmpty($attr['ColourID'] ?? null);
-        $colourName           = $this->nullIfEmpty($attr['ColourName'] ?? null);
-        $sizeId               = $this->nullIfEmpty($attr['SizeID'] ?? null);
         $configId             = $this->nullIfEmpty($attr['CONFIGID'] ?? null);
         $configName           = $this->nullIfEmpty($attr['ConfigName'] ?? null);
         $eanBarcode           = $this->nullIfEmpty($attr['EANBarcode'] ?? ($product['code'] ?? null));
@@ -397,8 +471,48 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
 
-        $defaultStore         = $this->nullIfEmpty($attr['DefaultStore'] ?? null);
-        $secondaryStore       = $this->nullIfEmpty($attr['SecondaryStore'] ?? null);
+        $decodeStoreLocation = function ($json) {
+            $data = json_decode($json ?? '', true);
+            return $this->nullIfEmpty($data[0]['location'] ?? null);
+        };
+
+        $sumSOH = function ($json) {
+            $total = 0;
+
+
+            $data = json_decode($json ?? '', true);
+
+
+            if (is_array($data)) {
+                foreach ($data as $row) {
+                    $total += (float) ($row['SOH'] ?? 0);
+                }
+            }
+
+            return $this->nullIfEmpty($total);
+        };
+
+
+        $attrLower = array_change_key_case($attr, CASE_LOWER);
+
+        $primaryJson   = $attrLower['primaryjson'] ?? null;
+        $secondaryJson = $attrLower['secondaryjson'] ?? null;
+        // Default Store
+        $defaultStore = $decodeStoreLocation($primaryJson ?? null);
+        // Secondary Store
+        $secondaryStore = $decodeStoreLocation($secondaryJson ?? null);
+        // $defaultStore = $attr['DefaultStore'] ?? null;
+        // $secondaryStore = $attr['SecondaryStore'] ?? null;
+
+        // SOH (Default)
+        $sohDefault = $sumSOH($primaryJson ?? null);
+        // SOH (Secondary)
+        $sohSecondary = $sumSOH($secondaryJson ?? null);
+
+        // dd($sohSecondary, $sohDefault);
+
+
+
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $sofLastModified      = !empty($attr['SOFLastModified'])
             ? date('Y-m-d H:i:s', strtotime($attr['SOFLastModified']))
@@ -417,20 +531,20 @@ class GetProductService implements UserOperationInterface
         $priceLastModified    = !empty($attr['PriceLastModified'])
             ? date('Y-m-d H:i:s', strtotime($attr['PriceLastModified']))
             : (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
+        $pswPriceListItemCategory = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[0] ?? null));
+        $attCateName = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[1] ?? null));
+        $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? $attCateName ?? null);
 
-        $pswPriceListItemCategory = $this->nullIfEmpty($attr['PSWPRICELISTITEMCATEGORY'] ?? null);
-        $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? null);
+
         $icsc                 = $this->nullIfEmpty($attr['ICSC'] ?? null);
         $customItemName       = $this->nullIfEmpty($attr['customItemName'] ?? null);
-        $receiptDescription   = $this->nullIfEmpty($attr['receiptDescription'] ?? null);
-        $erplyError           = $this->nullIfEmpty($attr['erplyError'] ?? null);
 
         /* Numeric / flags (keep defaults) */
-        $retailSalesPrice         = $attr['RetailSalesPrice'] ?? ($product['price'] ?? 0);
-        $retailSalesPrice2        = $attr['RetailSalesPrice2'] ?? ($product['priceWithVat'] ?? 0);
-        $retailSalesPriceExclGST  = $attr['RetailSalesPriceExclGST'] ?? 0;
-        $retailSalesPriceExclGST2 = $attr['RetailSalesPriceExclGST2'] ?? 0;
-        $costPrice                = $attr['CostPrice'] ?? ($product['cost'] ?? 0);
+        $retailSalesPrice         = $product['priceWithVat'] ?? 00.00;
+        $retailSalesPrice2        = $this->nullIfEmpty($attr['RetailSalesPrice2'] ?? 00.00);
+        $retailSalesPriceExclGST  = $this->nullIfEmpty($attr['RetailSalesPriceExclGST'] ?? 00.00);
+        $retailSalesPriceExclGST2 = $this->nullIfEmpty($attr['RetailSalesPriceExclGST2'] ?? 00.00);
+        $costPrice                = $this->nullIfEmpty($attr['CostPrice'] ?? 00.00);
 
         $barcodeDuplicate     = $attr['barcodeDuplicate'] ?? 0;
         $colorFlag            = $attr['colorFlag'] ?? 0;
@@ -442,6 +556,28 @@ class GetProductService implements UserOperationInterface
         $assortmentPending    = $attr['assortmentPending'] ?? 1;
         $assortmentRemovePending = $attr['assortmentRemovePending'] ?? 1;
         $imagePending         = $attr['imagePending'] ?? 1;
+        //get color id and size id name
+
+        $variationDescription = $product['variationDescription'] ?? [];
+
+        $attributes = [];
+
+        foreach ($variationDescription as $variation) {
+            $key = strtolower(trim($variation['name'] ?? ''));
+
+            $attributes[$key] = [
+                'id'    => $variation['variationID'] ?? null,
+                'value' => $variation['value'] ?? null,
+            ];
+        }
+
+        // Access easily
+        $colorId   = $attributes['color']['id'] ?? null;
+        $colorName = $attributes['color']['value'] ?? null;
+
+        $sizeId    = $attributes['size']['id'] ?? null;
+        $sizeName  = $attributes['size']['value'] ?? null;
+
 
         // ✅ OLD RECORD
         $old = $this->variationLive
@@ -469,6 +605,7 @@ class GetProductService implements UserOperationInterface
             isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : '',
         ]);
 
+
         // ✅ UPDATE OR CREATE ALL COLUMNS
         $change = $this->variationLive->updateOrCreate(
             [
@@ -482,7 +619,7 @@ class GetProductService implements UserOperationInterface
                 // BASIC
                 "ItemName"          => trim($itemName),
                 "ERPLYSKU"          => $erplySKU,
-                "WEBSKU"            => $webSKU,
+                "WEBSKU"            => $product['parentProductID'] ?? null,
                 "ITEMID"            => $itemId,
                 "schoolID"          => $schoolId,
                 "schoolName"        => $schoolName,
@@ -525,7 +662,7 @@ class GetProductService implements UserOperationInterface
 
                 // SOF
                 "SOFTemplate"         => $sofTemplate,
-                "SOFName"             => $sofName,
+                "SOFName"             => $category_Name,
                 "SOFOrder"            => $sofOrder,
                 "SOFStatus"           => $sofStatus,
                 "PLMStatus"           => $plmStatus,
@@ -534,11 +671,11 @@ class GetProductService implements UserOperationInterface
                 // ITEM DETAILS
                 "ConfigName"          => $configName,
                 "CONFIGID"            => $configId,
-                "ColourName"          => $colourName,
-                "ColourID"            => $colourId,
-                "SizeID"              => $sizeId,
+                "ColourName"          => $colorName,
+                "ColourID"            => $colorId,
+                "SizeID"              => $sizeName,
                 "customItemName"      => $customItemName,
-                "receiptDescription"  => $receiptDescription,
+
 
                 // DATES
                 "ItemLastModified"     => $itemLastModified,
@@ -555,7 +692,7 @@ class GetProductService implements UserOperationInterface
                 "genericProduct"       => $genericProduct,
                 "checkErply"           => $checkErply,
                 "erplyDeleted"         => $erplyDeleted,
-                "erplyError"           => $erplyError,
+
                 "assortmentPending"    => $assortmentPending,
                 "assortmentRemovePending" => $assortmentRemovePending,
                 "erplyEnabled"         => $erplyEnabled,
@@ -564,8 +701,41 @@ class GetProductService implements UserOperationInterface
 
                 // RAW DATA
                 "compareField"         => $compareField,
+                "primaryJson"         => $primaryJson,
+                "secondaryJson"        => $secondaryJson,
+                "erplyAttributes" => json_encode($attributes ?? []),
+                "erplyStatus" => $status ?? null,
+
             ]
         );
+
+        $sohDefData = [
+            'icsc' => $icsc,
+            'AvailablePhysical' => $sohDefault,
+            'warehouse' => $defaultStore,
+            'item' => $product['productID'] ?? null
+        ];
+
+        $sohSecData = [
+            'icsc' => $icsc,
+            'AvailablePhysical' => $sohSecondary,
+            'warehouse' => $secondaryStore,
+            'item' => $product['productID'] ?? null
+
+        ];
+//  dd($sohDefData,$sohSecData);
+        $soh = LiveItemByLocation::updateOrCreate(
+            ['icsc' => $icsc, 'warehouse' => $defaultStore],
+            $sohDefData
+        );
+
+
+        $soh = LiveItemByLocation::updateOrCreate(
+            ['icsc' => $icsc, 'warehouse' => $secondaryStore],
+            $sohSecData
+        );
+
+
 
         // ✅ LOG
         $this->letsLog->setChronLog(
@@ -915,6 +1085,17 @@ class GetProductService implements UserOperationInterface
         if ($vlatest) {
             $l = $mlatest->productAdded > $vlatest->productAdded ? $mlatest->productAdded : $vlatest->productAdded;
             return strtotime($l);
+        }
+        return 0; // strtotime($latest);
+    }
+
+    public function getProductByDateFilter($req)
+    {
+        // echo "im call";
+        $latest = UserOperationLog::where('clientCode', $this->api->client->clientCode)->where('tableName', 'variation_products_live')->orderBy('timestamp', 'desc')->first();
+        if ($latest) {
+
+            return strtotime($latest->timestamp);
         }
         return 0; // strtotime($latest);
     }

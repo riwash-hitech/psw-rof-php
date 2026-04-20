@@ -211,6 +211,7 @@ Route::get('/get-product', [GetMatrixProductController::class, 'getProduct']);
 Route::get('/get-product-v2', [GetMatrixProductController::class, 'getProductV2']);
 Route::get('/get-product-pim', [GetMatrixProductController::class, 'getProductPIM']);
 Route::get("/get-product-group", [GetProductGroupController::class, 'getProductGroup']);
+Route::get("/get-product-group-v2", [GetProductGroupController::class, 'getProductGroupV2']);
 Route::get("/get-product-category", [GetProductCategoryController::class, 'getProductCategory']);
 Route::get("/get-customer", [GetCustomerController::class, 'getCustomer']);
 Route::get("/get-customer-groups", [GetCustomerGroupController::class, 'getCustomerGroups']);

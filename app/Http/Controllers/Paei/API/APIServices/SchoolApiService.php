@@ -420,15 +420,13 @@ class SchoolApiService
         //first getting the distinct SOF Template
         // $sofTemplate  = $this->school->select("SOFTemplate", "SOFName")->where("SchoolID", $req->schoolID)->where("erplyEnabled", 1)->groupBy("SOFTemplate")->orderBy("SOFTemplate", 'asc')->get();
         $sofTemplate  = LiveProductVariation::select("SOFTemplate", "SOFName")->where("SchoolID", $req->schoolID)->where("erplyEnabled", 1)->groupBy("SOFTemplate")->orderBy("SOFTemplate", 'asc')->get();
-
         $currentSOF = '';
         if (count($sofTemplate) > 0) {
             $currentSOF = $sofTemplate[0]["SOFTemplate"];
         }
-        if (isset($req->sofTemplate) == 1) {
+        if (isset($req->sofTemplate)) {
             $currentSOF = $req->sofTemplate;
         }
-
 
 
         $query = $this->school
@@ -466,9 +464,14 @@ class SchoolApiService
                     "PSWPRICELISTITEMCATEGORY",
                 ]
             );
+
         if ($req->has('schoolID')) {
             $query->where("newsystem_product_matrix_live.SchoolID", $req->schoolID);
         }
+
+
+        if(!isset($req->sofTemplate)) {
+
         $query->where(function ($q) use ($requestData, $req) {
             foreach ($requestData as $keys => $value) {
                 if ($value != null) {
@@ -480,8 +483,7 @@ class SchoolApiService
                 }
             }
         });
-
-
+        }
 
 
         $results = $query
@@ -497,6 +499,7 @@ class SchoolApiService
                                 "SchoolID",
                                 "SchoolName",
                                 "ColourName",
+                                "ColourID",
                                 "SizeID",
                                 "ItemName",
                                 "ERPLYSKU",
@@ -532,6 +535,12 @@ class SchoolApiService
 
 
         $results->each(function ($item) use ($currentWarehouse, $newResults, $debug) {
+            $firstVar = $item->variations->first();
+
+            if ($firstVar) {
+                $item->ColourID   = $firstVar->ColourID;
+                $item->SizeID   = $firstVar->SizeID;
+            }
 
             if ($item->variations_count == 1 && !$item->variations->isEmpty()) {
                 $defaultStore = @$item->variations[0]->DefaultStore;
@@ -681,6 +690,7 @@ class SchoolApiService
                                 ));
                             }
                         });
+
 
                         $newMatrixProduct = clone $item;
                         // Modify the clone to reflect the current variation's details
@@ -862,13 +872,12 @@ class SchoolApiService
         $requestData = $req->except(Except::$except);
         $colourID = $req->ColourID ?? '';
         $matrix = LiveProductMatrix::where("WEBSKU", $req->WEBSKU)->first();
-
         //first checking is there multiple colour
         $colours = LiveProductVariation::select("ColourName")
             ->where("WEBSKU", $req->WEBSKU)
-            ->when($colourID != '', function ($q) use ($colourID) {
-                $q->where("ColourID", $colourID);
-            })
+            // ->when($colourID != '', function ($q) use ($colourID) {
+            //     $q->where("ColourID", $colourID);
+            // })
             ->where("erplyID", '>', 0)
             ->where("erplyEnabled", 1)
             ->where("PSWPRICELISTITEMCATEGORY", '>', 0)
@@ -880,6 +889,8 @@ class SchoolApiService
             ->orderBy("ColourName", "asc")
             ->pluck("ColourName")
             ->toArray();
+
+            // dd($colours);
         $slideData = array();
         foreach ($colours as $color) {
             $datas = LiveProductVariation::with(
@@ -925,6 +936,7 @@ class SchoolApiService
                 // ->orderBy("newsystem_product_size_sort_order_live.sort_order", "asc")
                 ->get();
             $datas->each(function ($variation) use($currentWarehouse){
+
                 if (is_null($variation->stocks)) {
                     $variation->setRelation('stocks', collect(
                         [

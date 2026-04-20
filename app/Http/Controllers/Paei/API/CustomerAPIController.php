@@ -45,7 +45,7 @@ class CustomerAPIController extends Controller
     public function getAllCustomers(Request $req){
         return $this->service->getAllCustomers($req);
     }
-    
+
 
     public function getCustomersByID(Request $req){
         if($req->id){
@@ -57,7 +57,7 @@ class CustomerAPIController extends Controller
 
     public function saveCustomer(Request $req){
 
-        
+
 
         $customRules = array(
             // 'firstName' => 'required',
@@ -79,7 +79,7 @@ class CustomerAPIController extends Controller
             if(isset($req['companyName2']) == 0 && $req['companyName2'] == ''){
                 $customRules['companyName'] = 'required';
             }
-            
+
         }
 
         if(isset($req->notify) == 1 && $req->notify == true){
@@ -87,19 +87,15 @@ class CustomerAPIController extends Controller
                 // $customRules['mobile'] = 'required|numeric|min:10';
                 $customRules['mobile'] = 'required|numeric|min:10';
             }
-            
-             
+
+
 
             if($req->email && $req->email != ''){
                 $customRules['email'] = 'required|email';
             }
-            
-            
+
+
         }
-
-
-
-       
 
         if($req->mobile && $req->mobile != ''){
             if(strlen((string)$req->mobile) != 10){
@@ -109,11 +105,11 @@ class CustomerAPIController extends Controller
         }
         // return $this->failWithMessage("Validation Checking");
         // die;
-        $validator = Validator::make($req->all(),  $customRules); 
+        $validator = Validator::make($req->all(),  $customRules);
         if ($validator->fails()) {
 
             return $this->validationError($validator->errors()->messages());
-            
+
         }
         // return $this->failWithMessage("Phone number must be at least 10 digits!");
 
@@ -121,24 +117,24 @@ class CustomerAPIController extends Controller
         //now checking customer email locally
 
         if($req->email && $req->email != ''){
-             
+
             $isExist = Customer::where("email", $req->email)->where("clientCode", $this->api->client->clientCode)->first();
             if($isExist){
                 return response()->json(["status" => 400, "success" => false, "message" => "Email already exists", "records" => collect($isExist)]);
-            } 
+            }
             //now checking customer in erply
-            $cuParam = array( 
+            $cuParam = array(
                 "searchEmail" => $req->email,
             );
             $isExist = $this->api->sendRequest("getCustomers", $cuParam);
             if($isExist["status"]["errorCode"] == 0 && !empty($isExist["records"])){
                 return response()->json(["status" => 400, "success" => false, "message" => "Email already exists"]);
             }
- 
+
         }
 
         if($req->mobile){
-            
+
             $mob = trim($req->mobile);
             $mob = str_replace('-','', $mob);
 
@@ -147,10 +143,11 @@ class CustomerAPIController extends Controller
                 return response()->json(["status" => 400, "success" => false, "message" => "Mobile already exists",  "records" => collect($isExist)]);
             }
 
-            //now checking customer in erply 
-            $cuParam = array( 
+            //now checking customer in erply
+            $cuParam = array(
                 "searchMobile" => $mob,
             );
+
             $isExist = $this->api->sendRequest("getCustomers", $cuParam);
             if($isExist["status"]["errorCode"] == 0 && !empty($isExist["records"])){
                 return response()->json(["status" => 400, "success" => false, "message" => "Email already exists"]);
@@ -169,15 +166,15 @@ class CustomerAPIController extends Controller
         // }
 
         return $this->service->saveCustomer($req);
-        
+
     }
 
 
     public function deleteCustomer(Request $req){
         // echo "hello"
-        $validator = Validator::make($req->all(), [ 
-            'id' => 'required', 
-        ]); 
+        $validator = Validator::make($req->all(), [
+            'id' => 'required',
+        ]);
 
         if ($validator->fails()) {
             return response()->json([
@@ -186,7 +183,7 @@ class CustomerAPIController extends Controller
         }
 
         return $this->service->deleteCustomer($req);
-        
+
     }
 
 
