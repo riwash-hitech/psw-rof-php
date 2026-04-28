@@ -429,7 +429,7 @@ class GetProductService implements UserOperationInterface
         }
 
         $erplySyncDate->save();
-        dump($erplySyncDate->matrix_product_added, $product['added']);
+        // dump($erplySyncDate->matrix_product_added, $product['added']);
         // dump($erplySyncDate);
 
     }
