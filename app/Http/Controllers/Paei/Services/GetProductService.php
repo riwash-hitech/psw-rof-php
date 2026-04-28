@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Paei\Services;
 use App\Classes\UserLogger;
 use App\Contracts\UserOperationInterface;
 use App\Http\Controllers\Services\EAPIService;
+use App\Models\ErplySyncDate;
 use App\Models\PAEI\{MatrixProduct, ProductGroup, Supplier, TempDate, UserOperationLog, VariationProduct, Warehouse};
 use App\Models\PswClientLive\Local\{LiveItemByLocation, LiveProductMatrix, LiveProductVariation};
 use App\Traits\UserOperationTrait;
+use Carbon\Carbon;
 
 class GetProductService implements UserOperationInterface
 {
@@ -403,9 +405,33 @@ class GetProductService implements UserOperationInterface
             $sohSecData
         );
 
+        $this->setSyncDate($product, 'MATRIX');
 
 
         return $change;
+    }
+
+    public function setSyncDate($product, $type)
+    {
+
+        $erplySyncDate = ErplySyncDate::first();
+
+        if (!$erplySyncDate) {
+            $erplySyncDate = new ErplySyncDate();
+        }
+
+        if ($type == 'MATRIX') {
+            $erplySyncDate->matrix_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
+            $erplySyncDate->matrix_product_last_modified = Carbon::createFromTimestamp($product['lastModified'])->toDateTimeString();
+        } else {
+            $erplySyncDate->variation_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
+            $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($product['lastModified'])->toDateTimeString();
+        }
+
+        $erplySyncDate->save();
+        dump($erplySyncDate->matrix_product_added, $product['added']);
+        // dump($erplySyncDate);
+
     }
 
    private function nullIfEmpty($value)
@@ -470,6 +496,7 @@ class GetProductService implements UserOperationInterface
         $gender               = $this->nullIfEmpty($attr['Gender'] ?? null);
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
+
 
         $decodeStoreLocation = function ($json) {
             $data = json_decode($json ?? '', true);
@@ -735,6 +762,7 @@ class GetProductService implements UserOperationInterface
             $sohSecData
         );
 
+        $this->setSyncDate($product, 'VARIATION');
 
 
         // ✅ LOG
@@ -1064,8 +1092,52 @@ class GetProductService implements UserOperationInterface
         return 0;
     }
 
-    public function getLastUpdateDate()
+
+    public function getLastUpdateDate($type = 'changed')
     {
+        $erplyDate = ErplySyncDate::latest()->first();
+
+        if (!$erplyDate) {
+            return 0;
+        }
+
+        // Pick correct columns based on type
+        if ($type === 'addedSince') {
+            $matrixDate = $erplyDate->matrix_product_added;
+            $variationDate = $erplyDate->variation_product_added;
+        } else { // 'changed' or 'modified'
+            $matrixDate = $erplyDate->matrix_product_last_modified;
+            $variationDate = $erplyDate->variation_product_last_modified;
+        }
+
+        // Handle nulls safely
+        if (!$matrixDate && !$variationDate) {
+            return 0;
+        }
+
+        if (!$matrixDate) {
+            return $variationDate;
+        }
+
+        if (!$variationDate) {
+            return $matrixDate;
+        }
+
+        // Return the smaller (earlier) datetime
+        $l = $matrixDate > $variationDate ? $matrixDate : $variationDate;
+
+        return strtotime($l);
+    }
+
+    // public function getLastUpdateDate()
+    // {
+
+    // $erplyDate = ErplySyncDate::latest()->first();
+    // if(!$erplyDate){
+    //     return 0;
+    // }
+
+
         // echo "im call";
         //  $latest = $this->variation->where('clientCode',  $this->api->client->clientCode)->orderBy('lastModified', 'desc')->first();
         // if($latest){
@@ -1077,17 +1149,17 @@ class GetProductService implements UserOperationInterface
         //     }
         // }
 
-        $erplyFlag = ($this->api->client->clientCode == 607655) ? '' : 'PSW';
-        $vlatest = $this->variationLive->where('ERPLYFLAG', $erplyFlag)->orderBy('productAdded', 'desc')->first();
-        $mlatest = $this->liveProductMatrix->where('ERPLYFLAG', $erplyFlag)->orderBy('productAdded', 'desc')->first();
+        // $erplyFlag = ($this->api->client->clientCode == 607655) ? '' : 'PSW';
+        // $vlatest = $this->variationLive->where('ERPLYFLAG', $erplyFlag)->orderBy('productAdded', 'desc')->first();
+        // $mlatest = $this->liveProductMatrix->where('ERPLYFLAG', $erplyFlag)->orderBy('productAdded', 'desc')->first();
         //  echo $vlatest->lastModified."  ".$mlatest->lastModified;
         //  die;
-        if ($vlatest) {
-            $l = $mlatest->productAdded > $vlatest->productAdded ? $mlatest->productAdded : $vlatest->productAdded;
-            return strtotime($l);
-        }
-        return 0; // strtotime($latest);
-    }
+        // if ($vlatest) {
+        //     $l = $mlatest->productAdded > $vlatest->productAdded ? $mlatest->productAdded : $vlatest->productAdded;
+        //     return strtotime($l);
+        // }
+    //     return 0; // strtotime($latest);
+    // }
 
     public function getProductByDateFilter($req)
     {

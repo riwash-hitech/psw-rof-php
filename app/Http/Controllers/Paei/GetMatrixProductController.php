@@ -41,15 +41,14 @@ class GetMatrixProductController extends Controller
     public function getProduct(Request $request){
         info("Cron Called for Product Sync This is Old Version");
 
-        $syncType = $request->syncType ?? 'changeSince';
+        $syncType = $request->syncType ?? 'changeSince'; // can be changeSince or addedSince
         $orderBy = $request->orderBy ?? 'changed';
         $sortBy = $request->sortBy ?? 'asc';
         $limit = $request->limit ?? 100;
-
         $param = array(
             "orderBy" => $orderBy,
             "orderByDir" => $sortBy,
-            $syncType => $this->service->getLastUpdateDate(),
+            $syncType => $this->service->getLastUpdateDate($syncType),
             "recordsOnPage" => $limit,
             "includeMatrixVariations" => 1,
             "getPackagingMaterials" => 1,
@@ -58,7 +57,7 @@ class GetMatrixProductController extends Controller
             "getRelatedFiles" => 1,
             "getRelatedProducts" => 1,
             "getReplacementProducts" => 1,
-            // 'type' => 'PRODUCT',
+            'type' => 'PRODUCT',
             // "productIDs" => '264088,262102,262086,262105,262089,262119,262121,262123,262124,262115,262093,262109,263157,263488',
             // "searchAttributeName" => 'defaultStore',
             // "searchAttributeValue" => '3R390',
@@ -69,7 +68,9 @@ class GetMatrixProductController extends Controller
             // "active" => 1,
             "sessionKey" => $this->api->client->sessionKey
          );
-// dd($this->service->getLastUpdateDate(), $param);
+
+
+        //  dd($this->api->client);
 
         //  print_r($param);
         //  die;
