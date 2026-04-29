@@ -32,6 +32,7 @@ class GetProductGroupService implements UserOperationInterface{
     protected function groupSaveUpdateOldAPI($product){
         //for log
         $old = $this->group->where('clientCode',  $this->api->client->clientCode)->where('productGroupID', $product['productGroupID'])->first();
+
         $change =ProductGroup::updateOrCreate(
                 [
                     "clientCode" => $this->api->client->clientCode,
@@ -56,6 +57,7 @@ class GetProductGroupService implements UserOperationInterface{
 
                 ]
             );
+
             $this->letsLog->setChronLog($old ? json_encode($old, true) : '', json_encode($change, true), $old  ? "Product Group Updated" : "Product Group Created");
     }
 
@@ -109,7 +111,7 @@ class GetProductGroupService implements UserOperationInterface{
     protected function groupSaveUpdateV2($product){
         //for log
         $old = $this->group->where('clientCode',  $this->api->client->clientCode)->where('productGroupID', $product['id'])->first();
-        
+
         $change = $this->group->updateOrCreate(
                 [
                     "clientCode" => $this->api->client->clientCode,
@@ -134,7 +136,7 @@ class GetProductGroupService implements UserOperationInterface{
 
                 ]
             );
-            
+
         $this->letsLog->setChronLog($old ? json_encode($old, true) : '', json_encode($change, true), $old  ? "Product Group Updated (V2)" : "Product Group Created (V2)");
     }
 

@@ -28,17 +28,18 @@ class GetProductGroupController extends Controller
         // echo "hello sir";
         // die;
         $param = array(
-            // "orderBy" => "added",
-            "orderByDir" => "asc",
-            "recordsOnPage" => "1000",
+            "orderBy" => "added",
+            "orderByDir" => "desc",
+            "recordsOnPage" => "200",
+
             // "active" => 1,
             // "pageNo" => $this->page,
             // "changedSince" => $this->service->getLastUpdateDate(),
-         );
+        );
+
         //  print_r($param);
         //  die;
          $res = $this->api->sendRequest("getProductGroups", $param);
-        // dd($res);
          if($res['status']['errorCode'] == 0 && !empty($res['records'])){
             return $this->service->saveUpdateOldAPI($res['records']);
          }
@@ -82,7 +83,7 @@ class GetProductGroupController extends Controller
          ];
 
          $res = $this->api->sendRequestBySwagger("https://api-pim-au.erply.com/v1/product/group", $param);
-         
+
          if(is_array($res) && count($res) > 0){
             return $this->service->saveUpdateV2($res);
          }

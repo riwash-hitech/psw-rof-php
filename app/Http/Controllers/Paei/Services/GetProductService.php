@@ -43,6 +43,7 @@ class GetProductService implements UserOperationInterface
 
               $this->matrixSaveUpdate($p, $this->api->client->clientCode);
             } else {
+                // dd($p);
 
                 // continue;
                 // dd('variation',$p);
@@ -201,7 +202,7 @@ class GetProductService implements UserOperationInterface
 
         // Assign all values safely
         $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
-        $schoolName           = $this->nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
+        $schoolName           = $this->nullIfEmpty($product['groupName'] ?? ($school ? $school->name : null));
         $customerGroup        = $this->nullIfEmpty($attr['CustomerGroup'] ?? null);
         $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
         $webSKU               = $this->nullIfEmpty($attr['WEBSKU'] ?? $erplySKU);
@@ -443,8 +444,15 @@ class GetProductService implements UserOperationInterface
         $erplyFlag = ($clientCode == 607655) ? '' : 'PSW';
 
         $school = ProductGroup::where('clientCode', $clientCode)
-            ->where('productGroupID', $product['groupID'])
+            ->whereNotNull('subGroups')
+            ->where('subGroups', '!=', '')
+            ->whereRaw('JSON_VALID(subGroups)')
+            ->whereRaw(
+                "JSON_SEARCH(subGroups, 'one', ?, NULL, '$[*].productGroupID') IS NOT NULL",
+                [(int) $product['groupID']]
+            )
             ->first();
+            // dd($school);
 
         // Extract attributes as key => value
         $attr = [];
@@ -475,14 +483,14 @@ class GetProductService implements UserOperationInterface
 
         // ✅ ALL VARIABLES WITH SAFE FALLBACKS
         $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
-        $schoolName           = $this->nullIfEmpty($attr['SchoolName'] ?? ($school ? $school->name : null));
+        $schoolName           = $this->nullIfEmpty($product['groupName'] ?? ($school ? $school->name : null));
         $customerGroup        = $this->nullIfEmpty($attr['CustomerGroup'] ?? null);
         $erplySKU             = $this->nullIfEmpty($attr['ERPLYSKU'] ?? ($product['code'] ?? null));
         $webSKU               = $this->nullIfEmpty($attr['WEBSKU'] ?? ($product['code2'] ?? null));
         $itemId               = $this->nullIfEmpty($attr['ITEMID']  ?? null);
         $itemName             = $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
         $configId             = $this->nullIfEmpty($attr['CONFIGID'] ?? null);
-        $configName           = $this->nullIfEmpty($attr['ConfigName'] ?? null);
+        $configName           = $this->nullIfEmpty($attr['CONFIGNAME'] ?? null);
         $eanBarcode           = $this->nullIfEmpty($attr['EANBarcode'] ?? ($product['code'] ?? null));
         $sofTemplate          = $this->nullIfEmpty($attr['SOFTemplate'] ?? null);
         $sofName              = $this->nullIfEmpty($attr['SOFName'] ?? null);
@@ -495,6 +503,8 @@ class GetProductService implements UserOperationInterface
         $gender               = $this->nullIfEmpty($attr['Gender'] ?? null);
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
+        $receiptDescription   = $this->nullIfEmpty($attr['receiptDescription'] ?? null);
+
 
 
         $decodeStoreLocation = function ($json) {
@@ -559,7 +569,11 @@ class GetProductService implements UserOperationInterface
             : (isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : null);
         $pswPriceListItemCategory = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[0] ?? null));
         $attCateName = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[1] ?? null));
-        $category_Name        = $this->nullIfEmpty($attr['Category_Name'] ?? $attCateName ?? null);
+        $category_Name = !empty($attr['Category_Name'])
+            ? $attr['Category_Name']
+            : $attCateName;
+
+
 
 
         $icsc                 = $this->nullIfEmpty($attr['ICSC'] ?? null);
@@ -652,8 +666,8 @@ class GetProductService implements UserOperationInterface
                 "CustomerGroup"     => $customerGroup,
 
                 // CATEGORY
-                "CategoryName"      => $categoryName,
                 "Category_Name"     => $category_Name,
+                "CategoryName"     => $category_Name,
                 "ICSC"              => $icsc,
 
                 // PRICE
@@ -701,6 +715,7 @@ class GetProductService implements UserOperationInterface
                 "ColourID"            => $colorId,
                 "SizeID"              => $sizeName,
                 "customItemName"      => $customItemName,
+                'receiptDescription' => $receiptDescription,
 
 
                 // DATES
