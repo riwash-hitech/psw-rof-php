@@ -39,13 +39,10 @@ class GetProductService implements UserOperationInterface
         $responseData = [];
         foreach ($products as $key =>  $p) {
 
-            // dd($p);
-
             if ($p['type'] == "MATRIX") {
 
-                $this->matrixSaveUpdate($p, $this->api->client->clientCode);
+              $this->matrixSaveUpdate($p, $this->api->client->clientCode);
             } else {
-
 
                 // continue;
                 // dd('variation',$p);
@@ -58,15 +55,17 @@ class GetProductService implements UserOperationInterface
 
             $responseData[] = [
                 'key ' => $key,
+                'type ' => $p['type'] ?? 'Unknown Type',
                 'id ' => $p['productID'] ?? null,
-                'message' => "Product with ID {$p['productID']} processed as " . ($p['type'] ?? 'Unknown Type')
+                'message' => "Product with ID {$p['productID']} processed as " . ($p['type'] ?? 'Unknown Type'),
+                'attribute' => $p['attributes'] ?? null
+
             ];
         }
 
-        dump($responseData);
+        return response()->json (['status' => 200, 'message' => "Products fetched and processed successfully.", 'data' => $responseData]);
 
 
-        return response()->json(['status' => 200, 'message' => "Product fetched Successfully."]);
     }
 
     public function saveUpdateByWebhook($product, $clientCode)
