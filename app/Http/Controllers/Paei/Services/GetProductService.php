@@ -166,6 +166,12 @@ class GetProductService implements UserOperationInterface
             $attr = array_column($product['attributes'], 'attributeValue', 'attributeName');
         }
 
+
+        if (isset($product['longAttributes']) && is_array($product['longAttributes'])) {
+            // Extract attributes from matrix
+            $longAttr = array_column($product['longAttributes'], 'attributeValue', 'attributeName');
+        }
+
         $webEnabled = 1;
         $erplyEnabled = 1;
         $erplyDeleted = 0;
@@ -234,8 +240,12 @@ class GetProductService implements UserOperationInterface
 
         $attrLower = array_change_key_case($attr, CASE_LOWER);
 
-        $primaryJson   = $attrLower['primaryjson'] ?? null;
-        $secondaryJson = $attrLower['secondaryjson'] ?? null;
+        $attrLowerJson = array_change_key_case($longAttr, CASE_LOWER);
+
+
+
+        $primaryJson   = $attrLowerJson['primaryjson'] ?? null;
+        $secondaryJson = $attrLowerJson['secondaryjson'] ?? null;
         // Default Store
         // $defaultStore = $attr['DefaultStore'] ?? null;
         // $secondaryStore = $attr['SecondaryStore'] ?? null;
@@ -441,7 +451,6 @@ class GetProductService implements UserOperationInterface
     protected function variationSaveUpdate($product, $clientCode)
     {
 
-    dd($product);
 
         $erplyFlag = ($clientCode == 607655) ? '' : 'PSW';
 
@@ -459,12 +468,19 @@ class GetProductService implements UserOperationInterface
         // Extract attributes as key => value
         $attr = [];
         $attributes = $product['attributes'] ?? [];
+        $longAttributes = $product['longAttributes'] ?? [];
 
 
         if (isset($product['attributes']) && is_array($product['attributes'])) {
             // Extract attributes from matrix
             $attr = array_column($product['attributes'], 'attributeValue', 'attributeName');
         }
+
+          if (isset($product['longAttributes']) && is_array($product['longAttributes'])) {
+            // Extract attributes from matrix
+            $longAttr = array_column($product['longAttributes'], 'attributeValue', 'attributeName');
+        }
+
 
 
         $webEnabled = 1;
@@ -534,10 +550,14 @@ class GetProductService implements UserOperationInterface
 
 
         $attrLower = array_change_key_case($attr, CASE_LOWER);
+        $attrLowerJson = array_change_key_case($longAttr, CASE_LOWER);
 
-        $primaryJson   = $attrLower['primaryjson'] ?? null;
-        $secondaryJson = $attrLower['secondaryjson'] ?? null;
+
+
+        $primaryJson   = $attrLowerJson['primaryjson'] ?? null;
+        $secondaryJson = $attrLowerJson['secondaryjson'] ?? null;
         // Default Store
+
         $defaultStore = $decodeStoreLocation($primaryJson ?? null);
         // Secondary Store
         $secondaryStore = $decodeStoreLocation($secondaryJson ?? null);
