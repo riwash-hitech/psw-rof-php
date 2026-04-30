@@ -441,6 +441,8 @@ class GetProductService implements UserOperationInterface
     protected function variationSaveUpdate($product, $clientCode)
     {
 
+    dd($product);
+
         $erplyFlag = ($clientCode == 607655) ? '' : 'PSW';
 
         $school = ProductGroup::where('clientCode', $clientCode)
@@ -458,10 +460,12 @@ class GetProductService implements UserOperationInterface
         $attr = [];
         $attributes = $product['attributes'] ?? [];
 
+
         if (isset($product['attributes']) && is_array($product['attributes'])) {
             // Extract attributes from matrix
             $attr = array_column($product['attributes'], 'attributeValue', 'attributeName');
         }
+
 
         $webEnabled = 1;
         $erplyEnabled = 1;
