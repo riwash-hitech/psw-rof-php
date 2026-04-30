@@ -406,6 +406,7 @@ class SchoolApiService
         $currentWarehouse = $this->getCurrentWarehouse($req->posID);
 
 
+
         if ($currentWarehouse["status"] == 0) {
             return $this->failWithMessage("Invalid Warehouse ID!");
         }
@@ -438,12 +439,12 @@ class SchoolApiService
                     ->orWhere("newsystem_product_matrix_live.SecondaryStore", $currentWarehouse["warehouseCode"]);
             })
             ->where("newsystem_product_matrix_live.erplyID", ">", 0)
-            ->where("newsystem_product_matrix_live.erplyEnabled", 1)
+            // ->where("newsystem_product_matrix_live.erplyEnabled", 1)
             // ->where("newsystem_product_matrix_live.PSWPRICELISTITEMCATEGORY", '>', 0)
             // ->where("newsystem_product_matrix_live.SOFTemplate", $currentSOF)
             ->whereHas("variations", function ($q) use ($currentSOF) {
                 $q->where("SOFTemplate", $currentSOF)
-                    ->where("erplyEnabled", 1)
+                    // ->where("erplyEnabled", 1)
                     ->where("PSWPRICELISTITEMCATEGORY", '>', 0);
             })
             // ->where("WEBSKU", '19882_1106285_0')
@@ -468,7 +469,6 @@ class SchoolApiService
         if ($req->has('schoolID')) {
             $query->where("newsystem_product_matrix_live.SchoolID", $req->schoolID);
         }
-
 
         if(!isset($req->sofTemplate)) {
 

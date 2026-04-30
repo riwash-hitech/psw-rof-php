@@ -58,7 +58,6 @@ class CustomerAPIController extends Controller
     public function saveCustomer(Request $req){
 
 
-
         $customRules = array(
             // 'firstName' => 'required',
             // 'lastName' => 'required',
