@@ -10,11 +10,13 @@ use App\Traits\UserOperationTrait;
 class GetWarehouseService implements UserOperationInterface{
 
     protected $warehouse;
+    protected $newSystemWarehouse;
     protected $api;
     use UserOperationTrait;
 
-    public function __construct(LiveWarehouseLocation $w, EAPIService $api){
+    public function __construct(LiveWarehouseLocation $w, EAPIService $api ,Warehouse $newSystemWarehouse){
         $this->warehouse = $w;
+        $this->newSystemWarehouse = $newSystemWarehouse;
         $this->api = $api;
     }
 
@@ -22,7 +24,11 @@ class GetWarehouseService implements UserOperationInterface{
 
         foreach($warehouses as $p){
             $this->warehouseSaveUpdate($p);
+
+            $this->newSystemWarehouseSaveUpdate($p);
         }
+
+
         return response()->json(['status'=>200, 'message'=>"Warehouse data fetched Successfully."]);
         // echo "Warehouse Fetched Successfully.";
     }
@@ -79,7 +85,6 @@ class GetWarehouseService implements UserOperationInterface{
 
     protected function warehouseSaveUpdate($product)
     {
-// dd($product);
 
         $this->warehouse->updateOrCreate(
             [
@@ -125,7 +130,7 @@ class GetWarehouseService implements UserOperationInterface{
                 "binbayPending" => $product['binbayPending'] ?? 0,
                 "binbaySOHPending" => $product['binbaySOHPending'] ?? 0,
 
-                "parentGroupID" => $product['parentGroupID'] ?? null,
+                "parentGroupID" => $product['defaultCustomerGroupID'] ?? null,
 
                 "created_at" => isset($product['added'])
                     ? date('Y-m-d H:i:s', $product['added'])
@@ -140,47 +145,49 @@ class GetWarehouseService implements UserOperationInterface{
         );
     }
 
-    // protected function warehouseSaveUpdate($product){
+    protected function newSystemWarehouseSaveUpdate($product){
 
-    //     $this->warehouse->updateOrCreate(
-    //             [
-    //                 "clientCode" => $this->api->client->clientCode,
-    //                 "warehouseID"  =>  $product['id']
-    //             ],
-    //             [
-    //                 "clientCode" => $this->api->client->clientCode,
-    //                 "warehouseID" => $product['id'],
-    //                 "name" => $product['name']['en'],
-    //                 "code" => $product['code'],
-    //                 "storeRegionID" => $product['storeRegionId'],
-    //                 "assortmentID"  => @$product['assortmentID'],
-    //                 "priceListID"  => @$product['priceListID'],
-    //                 "priceListID2"  => @$product['priceListID2'],
-    //                 "priceListID3"  => @$product['priceListID3'],
-    //                 "order_sw"  => @$product['order'],
-    //                 "phone"  => @$product['phone'],
-    //                 "fax"  => @$product['fax'],
-    //                 "email"  => @$product['email'],
-    //                 "website"  => @$product['website'],
-    //                 "bankName"  => @$product['bankName'],
-    //                 "bankAccountNumber"  => @$product['bankAccountNumber'],
-    //                 "iban"  => @$product['iban'],
-    //                 "swift"  => @$product['swift'],
-    //                 "onlineAppointmentsEnabled"  => @$product['onlineAppointmentsEnabled'] == true ? 1 : 0,
-    //                 "timeZone"  => @$product['timeZone'],
-    //                 "storeGroups"  => @$product['storeGroups'],
-    //                 "priceListID4"  => @$product['priceListID4'],
-    //                 "priceListID5"  => @$product['priceListID5'],
-    //                 "defaultCustomerGroupID"  => @$product['defaultCustomerGroupID'],
-    //                 "receiptAddressID"  => @$product['receiptAddressID'],
-    //                 "added"  =>  date('Y-m-d H:i:s',$product['added']),
-    //                 "addedBy" => $product['addedBy'],
-    //                 "changed" => date('Y-m-d H:i:s',$product['changed']),
-    //                 "changedBy" => $product['changedBy'],
+        $this->newSystemWarehouse->updateOrCreate(
+                [
+                    "clientCode" => $this->api->client->clientCode,
+                    "warehouseID"  =>  $product['id']
+                ],
+                [
+                    "clientCode" => $this->api->client->clientCode,
+                    "warehouseID" => $product['id'],
+                    "name" => $product['name']['en'],
+                    "code" => $product['code'],
+                    "storeRegionID" => $product['storeRegionId'],
+                    "assortmentID"  => @$product['assortmentID'],
+                    "priceListID"  => @$product['priceListID'],
+                    "priceListID2"  => @$product['priceListID2'],
+                    "priceListID3"  => @$product['priceListID3'],
+                    "order_sw"  => @$product['order'],
+                    "phone"  => @$product['phone'],
+                    "fax"  => @$product['fax'],
+                    "email"  => @$product['email'],
+                    "website"  => @$product['website'],
+                    "bankName"  => @$product['bankName'],
+                    "bankAccountNumber"  => @$product['bankAccountNumber'],
+                    "iban"  => @$product['iban'],
+                    "swift"  => @$product['swift'],
+                    "onlineAppointmentsEnabled"  => @$product['onlineAppointmentsEnabled'] == true ? 1 : 0,
+                    "timeZone"  => @$product['timeZone'],
+                    "storeGroups"  => @$product['storeGroups'],
+                    "priceListID4"  => @$product['priceListID4'],
+                    "priceListID5"  => @$product['priceListID5'],
+                    "defaultCustomerGroupID"  => @$product['defaultCustomerGroupID'],
+                    "receiptAddressID"  => @$product['receiptAddressID'],
+                    "added"  =>  date('Y-m-d H:i:s',$product['added']),
+                    "addedBy" => $product['addedBy'],
+                    "changed" => date('Y-m-d H:i:s',$product['changed']),
+                    "changedBy" => $product['changedBy'],
 
-    //             ]
-    //         );
-    // }
+                ]
+            );
+
+            // dd($this->newSystemWarehouse->get());
+    }
 
 
     public function getLastUpdateDate(){

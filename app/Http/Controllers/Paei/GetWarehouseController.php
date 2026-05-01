@@ -46,10 +46,10 @@ class GetWarehouseController extends Controller
         // $param = array(
         //     "take" => 200,
         // );
-        
+
         // $res = $this->api->sendRequest("getWarehouses", $param);
         // // dd($res);
-        
+
         // if($res['status']['errorCode'] == 0){
         // return $this->service->saveUpdate($res['records']);
         // }
@@ -60,13 +60,13 @@ class GetWarehouseController extends Controller
     }
 
     public function getOperationLog(){
-         
+
         $param = array(
             "orderBy" => "added",
             "orderByDir" => "asc",
             "recordsOnPage" => "200",
-            "tableName" => "warehouses", 
-            "addedFrom" => $this->getLastUpdateDateDelete("warehouses"), 
+            "tableName" => "warehouses",
+            "addedFrom" => $this->getLastUpdateDateDelete("warehouses"),
         );
         // dd($this->api->client);
          $res = $this->api->sendRequest("getUserOperationsLog", $param);
@@ -79,7 +79,7 @@ class GetWarehouseController extends Controller
             }
 
             $this->userOperationInterface->deleteRecords($res['records'], $this->api->client->clientCode);
-           
+
          }
          info("warehouses Operation Log Fetched Successfully.");
          return response()->json(["status" => 200, "message" => "warehouses Operation Log Fetched Successfully."]);
