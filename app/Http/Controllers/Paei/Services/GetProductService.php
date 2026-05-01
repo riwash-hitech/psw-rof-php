@@ -741,12 +741,15 @@ class GetProductService implements UserOperationInterface
 
 
         $this->setSyncDate($product, 'VARIATION');
-        // dd($product);
-        $matrixProduct = LiveProductMatrix::where('erplyID', $product['parentProductID'])->first();
 
-        if ($matrixProduct) {
-            $matrixProduct->update(['defaultStore' => $defaultStore, 'secondaryStore' => $secondaryStore]);
+        if (isset($product['parentProductID']) && $product['parentProductID'] !== '') {
+            $matrixProduct = LiveProductMatrix::where('erplyID', $product['parentProductID'])->first();
+            if ($matrixProduct) {
+                $matrixProduct->update(['defaultStore' => $defaultStore, 'secondaryStore' => $secondaryStore]);
+            }
         }
+
+
         // ✅ LOG
         $this->letsLog->setChronLog(
             $old ? json_encode($old, true) : '',
