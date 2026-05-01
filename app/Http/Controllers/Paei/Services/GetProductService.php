@@ -10,6 +10,7 @@ use App\Models\PAEI\{MatrixProduct, ProductGroup, Supplier, TempDate, UserOperat
 use App\Models\PswClientLive\Local\{LiveItemByLocation, LiveProductMatrix, LiveProductVariation};
 use App\Traits\UserOperationTrait;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class GetProductService implements UserOperationInterface
 {
@@ -165,10 +166,6 @@ class GetProductService implements UserOperationInterface
         }
 
 
-        if (isset($product['longAttributes']) && is_array($product['longAttributes'])) {
-            // Extract attributes from matrix
-            $longAttr = array_column($product['longAttributes'], 'attributeValue', 'attributeName');
-        }
 
         $webEnabled = 1;
         $erplyEnabled = 1;
@@ -188,21 +185,18 @@ class GetProductService implements UserOperationInterface
             $webEnabled = 0;
         }
 
-        $sumSOH = function ($json) {
-            $total = 0;
 
+        $result = DB::connection('mysql2')->selectOne("
+    SELECT
+        MAX(DefaultStore) AS DefaultStore,
+        MAX(secondaryStore) AS secondaryStore
+    FROM newsystem_product_variation_live
+    WHERE WEBSKU = ?
+", [$product['productID']]);
 
-            $data = json_decode($json ?? '', true);
+        $defaultStore = $result?->DefaultStore ?? null;
+        $secondaryStore = $result?->secondaryStore ?? null;
 
-
-            if (is_array($data)) {
-                foreach ($data as $row) {
-                    $total += (float) ($row['SOH'] ?? 0);
-                }
-            }
-
-            return $this->nullIfEmpty($total);
-        };
 
         // Assign all values safely
         $schoolId             = $this->nullIfEmpty($attr['SchoolID'] ?? ($product['groupID'] ?? null));
@@ -231,35 +225,6 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
 
-        $decodeStoreLocation = function ($json) {
-            $data = json_decode($json ?? '', true);
-            return $this->nullIfEmpty($data[0]['location'] ?? null);
-        };
-
-        $attrLower = array_change_key_case($attr, CASE_LOWER);
-
-        $attrLowerJson = array_change_key_case($longAttr, CASE_LOWER);
-
-
-
-        $primaryJson   = $attrLowerJson['primaryjson'] ?? null;
-        $secondaryJson = $attrLowerJson['secondaryjson'] ?? null;
-        // Default Store
-        // $defaultStore = $attr['DefaultStore'] ?? null;
-        // $secondaryStore = $attr['SecondaryStore'] ?? null;
-        // Default Store
-        $defaultStore = $decodeStoreLocation($primaryJson ?? null);
-        // Secondary Store
-        $secondaryStore = $decodeStoreLocation($secondaryJson ?? null);
-
-
-
-        // SOH (Default)
-        $sohDefault = $sumSOH($primaryJson ?? null);
-        // SOH (Secondary)
-        $sohSecondary = $sumSOH($secondaryJson ?? null);
-
-        // dd($defaultStore, $secondaryStore);
 
         $erplyFlagModified    = $this->nullIfEmpty($attr['ERPLYFLAGModified'] ?? null);
         $pswPriceListItemCategory = $this->nullIfEmpty(trim(explode(':', $attr['PSWPRICELISTITEMCATEGORY'] ?? '')[0] ?? null));
@@ -386,31 +351,6 @@ class GetProductService implements UserOperationInterface
             $old ? json_encode($old, true) : '',
             json_encode($change, true),
             $old ? "Matrix Product Updated" : "Matrix Product Created"
-        );
-        $sohDefData = [
-            'icsc' => $icsc,
-            'AvailablePhysical' => $sohDefault,
-            'warehouse' => $defaultStore,
-            'item' => $product['productID'] ?? null
-        ];
-
-        $sohSecData = [
-            'icsc' => $icsc,
-            'AvailablePhysical' => $sohSecondary,
-            'warehouse' => $secondaryStore,
-            'item' => $product['productID'] ?? null
-
-        ];
-
-        $soh = LiveItemByLocation::updateOrCreate(
-            ['icsc' => $icsc, 'warehouse' => $defaultStore],
-            $sohDefData
-        );
-
-
-        $soh = LiveItemByLocation::updateOrCreate(
-            ['icsc' => $icsc, 'warehouse' => $secondaryStore],
-            $sohSecData
         );
 
         $this->setSyncDate($product, 'MATRIX');
