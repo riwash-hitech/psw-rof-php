@@ -598,7 +598,7 @@ class GetProductService implements UserOperationInterface
 
 
 
-        $icsc                 = $this->nullIfEmpty($attr['ICSC'] ?? null);
+        $icsc                 = $product['productID'];
         $customItemName       = $this->nullIfEmpty($attr['customItemName'] ?? null);
 
         /* Numeric / flags (keep defaults) */
@@ -666,6 +666,8 @@ class GetProductService implements UserOperationInterface
             $product['netWeight'] ?? 0,
             isset($product['lastModified']) ? date('Y-m-d H:i:s', $product['lastModified']) : '',
         ]);
+
+
 
 
         // ✅ UPDATE OR CREATE ALL COLUMNS
@@ -786,17 +788,17 @@ class GetProductService implements UserOperationInterface
             'item' => $product['productID'] ?? null
 
         ];
-        //  dd($sohDefData,$sohSecData);
         $soh = LiveItemByLocation::updateOrCreate(
             ['icsc' => $icsc, 'warehouse' => $defaultStore],
             $sohDefData
         );
 
 
-        $soh = LiveItemByLocation::updateOrCreate(
+        $sohSec = LiveItemByLocation::updateOrCreate(
             ['icsc' => $icsc, 'warehouse' => $secondaryStore],
             $sohSecData
         );
+
 
         $this->setSyncDate($product, 'VARIATION');
         // dd($product);
