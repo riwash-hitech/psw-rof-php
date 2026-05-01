@@ -28,6 +28,12 @@ class GetWarehouseService implements UserOperationInterface{
             $this->newSystemWarehouseSaveUpdate($p);
         }
 
+        foreach ($warehouses as $p) {
+
+            $this->newSystemWarehouseSaveUpdate($p);
+        }
+
+
 
         return response()->json(['status'=>200, 'message'=>"Warehouse data fetched Successfully."]);
         // echo "Warehouse Fetched Successfully.";
