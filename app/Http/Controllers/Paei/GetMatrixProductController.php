@@ -58,7 +58,7 @@ class GetMatrixProductController extends Controller
             "getRelatedProducts" => 1,
             "getReplacementProducts" => 1,
             // 'type' => 'PRODUCT',
-            "productIDs" => '61064,9372',
+            // "productIDs" => '61064,9372',
             // "searchAttributeName" => 'defaultStore',
             // "searchAttributeValue" => '3R390',
             // "getStockInfo" => 1,
