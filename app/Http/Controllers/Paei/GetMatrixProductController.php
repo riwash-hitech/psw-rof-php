@@ -41,8 +41,8 @@ class GetMatrixProductController extends Controller
     public function getProduct(Request $request){
         info("Cron Called for Product Sync This is Old Version");
 
-        $syncType = $request->syncType ?? 'changedSince'; // can be changeSince or addedSince
-        $orderBy = $request->orderBy ?? 'changed';
+        $syncType = $request->syncType ?? 'addedSince'; // can be changeSince or addedSince
+        $orderBy = $request->orderBy ?? 'added';
         $sortBy = $request->sortBy ?? 'asc';
         $limit = $request->limit ?? 300;
         $param = array(
