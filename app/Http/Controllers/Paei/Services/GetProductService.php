@@ -41,7 +41,7 @@ class GetProductService implements UserOperationInterface
 
             if ($p['type'] == "MATRIX") {
 
-              $this->matrixSaveUpdate($p, $this->api->client->clientCode);
+                $this->matrixSaveUpdate($p, $this->api->client->clientCode);
             } else {
                 // dd($p);
 
@@ -64,9 +64,7 @@ class GetProductService implements UserOperationInterface
             ];
         }
 
-        return response()->json (['status' => 200, 'message' => "Products fetched and processed successfully.", 'data' => $responseData]);
-
-
+        return response()->json(['status' => 200, 'message' => "Products fetched and processed successfully.", 'data' => $responseData]);
     }
 
     public function saveUpdateByWebhook($product, $clientCode)
@@ -375,7 +373,7 @@ class GetProductService implements UserOperationInterface
             'erplyAttributes' => json_encode($attributes ?? []),
             'erplyStatus' => $status
         ];
-// dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
+        // dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
         // Update or create
         $change = $this->liveProductMatrix->updateOrCreate(
             ['ERPLYFLAG' => $erplyFlag, 'erplyID' => $itemId],
@@ -444,7 +442,7 @@ class GetProductService implements UserOperationInterface
 
     }
 
-   private function nullIfEmpty($value)
+    private function nullIfEmpty($value)
     {
         return $value === '' ? null : $value;
     }
@@ -463,7 +461,7 @@ class GetProductService implements UserOperationInterface
                 [(int) $product['groupID']]
             )
             ->first();
-            // dd($school);
+        // dd($school);
 
         // Extract attributes as key => value
         $attr = [];
@@ -476,7 +474,7 @@ class GetProductService implements UserOperationInterface
             $attr = array_column($product['attributes'], 'attributeValue', 'attributeName');
         }
 
-          if (isset($product['longAttributes']) && is_array($product['longAttributes'])) {
+        if (isset($product['longAttributes']) && is_array($product['longAttributes'])) {
             // Extract attributes from matrix
             $longAttr = array_column($product['longAttributes'], 'attributeValue', 'attributeName');
         }
@@ -788,7 +786,7 @@ class GetProductService implements UserOperationInterface
             'item' => $product['productID'] ?? null
 
         ];
-//  dd($sohDefData,$sohSecData);
+        //  dd($sohDefData,$sohSecData);
         $soh = LiveItemByLocation::updateOrCreate(
             ['icsc' => $icsc, 'warehouse' => $defaultStore],
             $sohDefData
@@ -801,8 +799,12 @@ class GetProductService implements UserOperationInterface
         );
 
         $this->setSyncDate($product, 'VARIATION');
+        // dd($product);
+        $matrixProduct = LiveProductMatrix::where('erplyID', $product['parentProductID'])->first();
 
-
+        if ($matrixProduct) {
+            $matrixProduct->update(['defaultStore' => $defaultStore, 'secondaryStore' => $secondaryStore]);
+        }
         // ✅ LOG
         $this->letsLog->setChronLog(
             $old ? json_encode($old, true) : '',
@@ -1176,26 +1178,26 @@ class GetProductService implements UserOperationInterface
     // }
 
 
-        // echo "im call";
-        //  $latest = $this->variation->where('clientCode',  $this->api->client->clientCode)->orderBy('lastModified', 'desc')->first();
-        // if($latest){
-        //     return strtotime($latest->lastModified);
-        // }else{
-        //     $latest = $this->matrix->where('clientCode',  $this->api->client->clientCode)->orderBy('lastModified', 'desc')->first();
-        //     if($latest){
-        //         return strtotime($latest->lastModified);
-        //     }
-        // }
+    // echo "im call";
+    //  $latest = $this->variation->where('clientCode',  $this->api->client->clientCode)->orderBy('lastModified', 'desc')->first();
+    // if($latest){
+    //     return strtotime($latest->lastModified);
+    // }else{
+    //     $latest = $this->matrix->where('clientCode',  $this->api->client->clientCode)->orderBy('lastModified', 'desc')->first();
+    //     if($latest){
+    //         return strtotime($latest->lastModified);
+    //     }
+    // }
 
-        // $erplyFlag = ($this->api->client->clientCode == 607655) ? '' : 'PSW';
-        // $vlatest = $this->variationLive->where('ERPLYFLAG', $erplyFlag)->orderBy('productAdded', 'desc')->first();
-        // $mlatest = $this->liveProductMatrix->where('ERPLYFLAG', $erplyFlag)->orderBy('productAdded', 'desc')->first();
-        //  echo $vlatest->lastModified."  ".$mlatest->lastModified;
-        //  die;
-        // if ($vlatest) {
-        //     $l = $mlatest->productAdded > $vlatest->productAdded ? $mlatest->productAdded : $vlatest->productAdded;
-        //     return strtotime($l);
-        // }
+    // $erplyFlag = ($this->api->client->clientCode == 607655) ? '' : 'PSW';
+    // $vlatest = $this->variationLive->where('ERPLYFLAG', $erplyFlag)->orderBy('productAdded', 'desc')->first();
+    // $mlatest = $this->liveProductMatrix->where('ERPLYFLAG', $erplyFlag)->orderBy('productAdded', 'desc')->first();
+    //  echo $vlatest->lastModified."  ".$mlatest->lastModified;
+    //  die;
+    // if ($vlatest) {
+    //     $l = $mlatest->productAdded > $vlatest->productAdded ? $mlatest->productAdded : $vlatest->productAdded;
+    //     return strtotime($l);
+    // }
     //     return 0; // strtotime($latest);
     // }
 

@@ -44,7 +44,7 @@ class GetMatrixProductController extends Controller
         $syncType = $request->syncType ?? 'addedSince'; // can be changeSince or addedSince
         $orderBy = $request->orderBy ?? 'added';
         $sortBy = $request->sortBy ?? 'asc';
-        $limit = $request->limit ?? 100;
+        $limit = $request->limit ?? 1000;
         $param = array(
             "orderBy" => $orderBy,
             "orderByDir" => $sortBy,
@@ -52,13 +52,13 @@ class GetMatrixProductController extends Controller
             "recordsOnPage" => $limit,
             "includeMatrixVariations" => 1,
             "getPackagingMaterials" => 1,
-            'status' => 'active',
+            // 'status' => 'active',
             "getRecipes" => 1,
             "getRelatedFiles" => 1,
             "getRelatedProducts" => 1,
             "getReplacementProducts" => 1,
             // 'type' => 'PRODUCT',
-            // "productIDs" => '61064,9372',
+            "productIDs" => '61064,9372',
             // "searchAttributeName" => 'defaultStore',
             // "searchAttributeValue" => '3R390',
             // "getStockInfo" => 1,
