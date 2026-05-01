@@ -405,7 +405,6 @@ class SchoolApiService
 
         $currentWarehouse = $this->getCurrentWarehouse($req->posID);
 
-        // dd($currentWarehouse);
 
 
 
