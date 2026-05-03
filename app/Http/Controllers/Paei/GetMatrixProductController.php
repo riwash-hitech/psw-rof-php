@@ -51,7 +51,7 @@ class GetMatrixProductController extends Controller
         $syncType = $request->syncType ?? 'addedSince'; // can be changeSince or addedSince
         $orderBy = $request->orderBy ?? 'added';
         $sortBy = $request->sortBy ?? 'asc';
-        $limit = $request->limit ?? 100;
+        $limit = $request->limit ?? 200;
         $param = array(
             "orderBy" => $orderBy,
             "orderByDir" => $sortBy,
