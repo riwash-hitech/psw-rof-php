@@ -45,13 +45,13 @@ class GetMatrixProductController extends Controller
         //     dd('dev enable');
         // }
 
-        // ini_set('memory_limit', '-1');
+        ini_set('memory_limit', '-1');
         info("Cron Called for Product Sync This is Old Version");
 
         $syncType = $request->syncType ?? 'addedSince'; // can be changeSince or addedSince
         $orderBy = $request->orderBy ?? 'added';
         $sortBy = $request->sortBy ?? 'asc';
-        $limit = $request->limit ?? 300;
+        $limit = $request->limit ?? 100;
         $param = array(
             "orderBy" => $orderBy,
             "orderByDir" => $sortBy,
