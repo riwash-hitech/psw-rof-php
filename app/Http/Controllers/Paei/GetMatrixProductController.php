@@ -40,10 +40,10 @@ class GetMatrixProductController extends Controller
 
     public function getProduct(Request $request){
 
-        // $dev = $request->dev ?? 0;
-        // if($dev == 0){
-        //     dd('dev enable');
-        // }
+        $dev = $request->dev ?? 0;
+        if($dev == 0){
+            dd('dev enable');
+        }
 
         // ini_set('memory_limit', '-1');
         info("Cron Called for Product Sync This is Old Version");
