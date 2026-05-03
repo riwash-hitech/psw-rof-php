@@ -39,6 +39,7 @@ class GetMatrixProductController extends Controller
     }
 
     public function getProduct(Request $request){
+        ini_set('memory_limit', '-1');
         info("Cron Called for Product Sync This is Old Version");
 
         $syncType = $request->syncType ?? 'addedSince'; // can be changeSince or addedSince
