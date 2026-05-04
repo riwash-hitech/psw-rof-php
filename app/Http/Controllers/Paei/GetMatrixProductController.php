@@ -55,7 +55,7 @@ class GetMatrixProductController extends Controller
         $param = array(
             "orderBy" => $orderBy,
             "orderByDir" => $sortBy,
-            // $syncType => $this->service->getLastUpdateDate($syncType),
+            $syncType => $this->service->getLastUpdateDate($syncType),
             "recordsOnPage" => $limit,
             "includeMatrixVariations" => 1,
             "getPackagingMaterials" => 1,
@@ -65,7 +65,7 @@ class GetMatrixProductController extends Controller
             "getRelatedProducts" => 1,
             "getReplacementProducts" => 1,
             // 'type' => 'PRODUCT',
-            "productIDs" => '61064,9372',
+            // "productIDs" => '61064,9372',
             // "searchAttributeName" => 'defaultStore',
             // "searchAttributeValue" => '3R390',
             // "getStockInfo" => 1,
