@@ -653,6 +653,10 @@ class SchoolApiService
                             ->where("erplyEnabled", 1)
                             ->where('erplyID', '>', 0)
                             ->where("ColourID", $key)
+                            ->where(function ($query) {
+                                $query->whereNotNull('defaultStore')
+                                    ->orWhereNotNull('secondaryStore');
+                            })
                             ->count();
                         $allVariations = LiveProductVariation::where("WEBSKU", $item->WEBSKU)->where("erplyEnabled", 1)->where("ColourID", $key)
                             ->where('PSWPRICELISTITEMCATEGORY', '>', 0)
