@@ -654,7 +654,7 @@ class SchoolApiService
                             ->where('erplyID', '>', 0)
                             ->where("ColourID", $key)
                             ->where(function ($query) {
-                                $query->whereNotNull('defaultStore')
+                                $query->orWhereNotNull('defaultStore')
                                     ->orWhereNotNull('secondaryStore');
                             })
                             ->count();
