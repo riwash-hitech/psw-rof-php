@@ -360,38 +360,27 @@ class GetProductService implements UserOperationInterface
         return $change;
     }
 
-
-
     public function setSyncDate($product, $type)
     {
-        $added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
-        $modified = Carbon::createFromTimestamp($product['lastModified'])->toDateTimeString();
+
+        $erplySyncDate = ErplySyncDate::first();
+
+        if (!$erplySyncDate) {
+            $erplySyncDate = new ErplySyncDate();
+        }
 
         if ($type == 'MATRIX') {
-            DB::connection()->statement("
-            UPDATE erply_sync_dates
-            SET
-                matrix_product_added = ?,
-                matrix_product_last_modified = ?,
-                updated_at = NOW()
-            WHERE id = 1
-        ", [
-                $added,
-                $modified
-            ]);
+            $erplySyncDate->matrix_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
+            $erplySyncDate->matrix_product_last_modified = Carbon::createFromTimestamp($product['lastModified'])->toDateTimeString();
         } else {
-            DB::connection()->statement("
-            UPDATE erply_sync_dates
-            SET
-                variation_product_added = ?,
-                variation_product_last_modified = ?,
-                updated_at = NOW()
-            WHERE id = 1
-        ", [
-                $added,
-                $modified
-            ]);
+            $erplySyncDate->variation_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
+            $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($product['lastModified'])->toDateTimeString();
         }
+
+        $erplySyncDate->save();
+        // dump($erplySyncDate->matrix_product_added, $product['added']);
+        // dump($erplySyncDate);
+
     }
 
     private function nullIfEmpty($value)
