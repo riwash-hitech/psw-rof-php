@@ -91,6 +91,8 @@ class GetMatrixProductController extends Controller
             return $this->service->saveUpdate($res['records']);
          }
 
+         dd('All Product Up-to-date');
+
     }
 
     public function getProductV2(){
