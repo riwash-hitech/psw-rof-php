@@ -51,7 +51,7 @@ class GetMatrixProductController extends Controller
         $syncType = $request->syncType ?? 'addedSince'; // can be changeSince or addedSince
         $orderBy = $request->orderBy ?? 'added';
         $sortBy = $request->sortBy ?? 'asc';
-        $limit = $request->limit ?? 300;
+        $limit = $request->limit ?? 500;
         $param = array(
             "orderBy" => $orderBy,
             "orderByDir" => $sortBy,
@@ -64,7 +64,7 @@ class GetMatrixProductController extends Controller
             "getRelatedFiles" => 1,
             "getRelatedProducts" => 1,
             "getReplacementProducts" => 1,
-            'type' => 'PRODUCT',
+            // 'type' => 'PRODUCT',
             // "productIDs" => '61064,9372',
             // "searchAttributeName" => 'defaultStore',
             // "searchAttributeValue" => '3R390',
