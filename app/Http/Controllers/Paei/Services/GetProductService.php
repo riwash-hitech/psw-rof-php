@@ -464,6 +464,8 @@ class GetProductService implements UserOperationInterface
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? ($product['categoryName'] ?? null));
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? ($product['netWeight'] ?? null));
         $receiptDescription   = $this->nullIfEmpty($attr['receiptDescription'] ?? null);
+        $customItemName   = $this->nullIfEmpty($attr['Receipt_Product_Name'] ?? null);
+
 
 
 
@@ -541,7 +543,6 @@ class GetProductService implements UserOperationInterface
 
 
         $icsc                 = $product['productID'];
-        $customItemName       = $this->nullIfEmpty($attr['customItemName'] ?? null);
 
         /* Numeric / flags (keep defaults) */
         $retailSalesPrice         = $product['priceWithVat'] ?? 00.00;
