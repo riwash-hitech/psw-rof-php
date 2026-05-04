@@ -758,21 +758,24 @@ class GetProductService implements UserOperationInterface
 
 
         $this->setSyncDate($product, 'VARIATION');
-
+        if (isset($product['parentProductID']) && $product['parentProductID'] !== '') {
         $existing = DB::connection('mysql2')
             ->table('newsystem_product_matrix_live')
             ->select('defaultStore', 'secondaryStore')
             ->where('erplyID', (int) $product['parentProductID'])
             ->first();
 
-        if (
-            $existing &&
-            !empty($existing->defaultStore) &&
-            !empty($existing->secondaryStore)
-        ) {
-            // both already exist → skip update
-            return;
+            if (
+                $existing &&
+                !empty($existing->defaultStore) &&
+                !empty($existing->secondaryStore)
+            ) {
+                // both already exist → skip update
+                return;
+            }
         }
+
+
 
         DB::connection('mysql2')->update("
         UPDATE newsystem_product_matrix_live
