@@ -151,7 +151,8 @@ class GetProductService implements UserOperationInterface
             ->first();
 
         // Get school info
-        $school = ProductGroup::where('clientCode', $clientCode)
+        $school = DB::table('newsystem_product_groups')
+            ->where('clientCode', $clientCode)
             ->where('productGroupID', $product['groupID'])
             ->first();
 
@@ -361,25 +362,30 @@ class GetProductService implements UserOperationInterface
 
     public function setSyncDate($product, $type)
     {
-
-        $erplySyncDate = ErplySyncDate::first();
-
-        if (!$erplySyncDate) {
-            $erplySyncDate = new ErplySyncDate();
-        }
+        $added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
+        $modified = Carbon::createFromTimestamp($product['lastModified'])->toDateTimeString();
 
         if ($type == 'MATRIX') {
-            $erplySyncDate->matrix_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
-            $erplySyncDate->matrix_product_last_modified = Carbon::createFromTimestamp($product['lastModified'])->toDateTimeString();
+            DB::connection()->statement("
+            INSERT INTO erply_sync_dates
+            (id, matrix_product_added, matrix_product_last_modified, created_at, updated_at)
+            VALUES (1, ?, ?, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE
+                matrix_product_added = VALUES(matrix_product_added),
+                matrix_product_last_modified = VALUES(matrix_product_last_modified),
+                updated_at = NOW()
+        ", [$added, $modified]);
         } else {
-            $erplySyncDate->variation_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
-            $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($product['lastModified'])->toDateTimeString();
+            DB::connection()->statement("
+            INSERT INTO erply_sync_dates
+            (id, variation_product_added, variation_product_last_modified, created_at, updated_at)
+            VALUES (1, ?, ?, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE
+                variation_product_added = VALUES(variation_product_added),
+                variation_product_last_modified = VALUES(variation_product_last_modified),
+                updated_at = NOW()
+        ", [$added, $modified]);
         }
-
-        $erplySyncDate->save();
-        // dump($erplySyncDate->matrix_product_added, $product['added']);
-        // dump($erplySyncDate);
-
     }
 
     private function nullIfEmpty($value)
@@ -392,7 +398,8 @@ class GetProductService implements UserOperationInterface
 
         $erplyFlag = ($clientCode == 607655) ? '' : 'PSW';
 
-        $school = ProductGroup::where('clientCode', $clientCode)
+        $school = DB::table('newsystem_product_groups')
+            ->where('clientCode', $clientCode)
             ->whereNotNull('subGroups')
             ->where('subGroups', '!=', '')
             ->whereRaw('JSON_VALID(subGroups)')
@@ -714,39 +721,58 @@ class GetProductService implements UserOperationInterface
             ]
         );
 
-        $sohDefData = [
-            'icsc' => $icsc,
-            'AvailablePhysical' => $sohDefault,
-            'warehouse' => $defaultStore,
-            'item' => $product['productID'] ?? null
-        ];
 
-        $sohSecData = [
-            'icsc' => $icsc,
-            'AvailablePhysical' => $sohSecondary,
-            'warehouse' => $secondaryStore,
-            'item' => $product['productID'] ?? null
+        if($defaultStore){
 
-        ];
-        $soh = LiveItemByLocation::updateOrCreate(
-            ['icsc' => $icsc, 'warehouse' => $defaultStore],
-            $sohDefData
-        );
+        // default store
+        DB::connection('mysql2')->statement("
+    INSERT INTO newsystem_item_by_locations
+    (icsc, warehouse, AvailablePhysical, item, created_at, updated_at)
+    VALUES (?, ?, ?, ?, NOW(), NOW())
+    ON DUPLICATE KEY UPDATE
+        AvailablePhysical = VALUES(AvailablePhysical),
+        item = VALUES(item),
+        updated_at = NOW()
+", [
+            $icsc,
+            $defaultStore,
+            $sohDefault,
+            $product['productID'] ?? null,
+        ]);
+        }
 
+        if ($secondaryStore) {
 
-        $sohSec = LiveItemByLocation::updateOrCreate(
-            ['icsc' => $icsc, 'warehouse' => $secondaryStore],
-            $sohSecData
-        );
+            // secondary store
+            DB::connection('mysql2')->statement("
+    INSERT INTO newsystem_item_by_locations
+    (icsc, warehouse, AvailablePhysical, item, created_at, updated_at)
+    VALUES (?, ?, ?, ?, NOW(), NOW())
+    ON DUPLICATE KEY UPDATE
+        AvailablePhysical = VALUES(AvailablePhysical),
+        item = VALUES(item),
+        updated_at = NOW()
+", [
+            $icsc,
+            $secondaryStore,
+            $sohSecondary,
+            $product['productID'] ?? null,
+        ]);
+        }
 
 
         $this->setSyncDate($product, 'VARIATION');
 
         if (isset($product['parentProductID']) && $product['parentProductID'] !== '') {
-            $matrixProduct = LiveProductMatrix::where('erplyID', $product['parentProductID'])->first();
-            if ($matrixProduct) {
-                $matrixProduct->update(['defaultStore' => $defaultStore, 'secondaryStore' => $secondaryStore]);
-            }
+            DB::connection('mysql2')->update("
+        UPDATE newsystem_product_matrix_live
+        SET defaultStore = ?, secondaryStore = ?, updated_at = NOW()
+        WHERE erplyID = ?
+    ", [
+                $defaultStore,
+                $secondaryStore,
+                (int) $product['parentProductID']
+            ]);
         }
 
 
