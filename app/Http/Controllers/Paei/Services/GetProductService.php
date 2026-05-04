@@ -360,6 +360,8 @@ class GetProductService implements UserOperationInterface
         return $change;
     }
 
+
+
     public function setSyncDate($product, $type)
     {
         $added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
@@ -367,24 +369,28 @@ class GetProductService implements UserOperationInterface
 
         if ($type == 'MATRIX') {
             DB::connection()->statement("
-            INSERT INTO erply_sync_dates
-            (id, matrix_product_added, matrix_product_last_modified, created_at, updated_at)
-            VALUES (1, ?, ?, NOW(), NOW())
-            ON DUPLICATE KEY UPDATE
-                matrix_product_added = VALUES(matrix_product_added),
-                matrix_product_last_modified = VALUES(matrix_product_last_modified),
+            UPDATE erply_sync_dates
+            SET
+                matrix_product_added = ?,
+                matrix_product_last_modified = ?,
                 updated_at = NOW()
-        ", [$added, $modified]);
+            WHERE id = 1
+        ", [
+                $added,
+                $modified
+            ]);
         } else {
             DB::connection()->statement("
-            INSERT INTO erply_sync_dates
-            (id, variation_product_added, variation_product_last_modified, created_at, updated_at)
-            VALUES (1, ?, ?, NOW(), NOW())
-            ON DUPLICATE KEY UPDATE
-                variation_product_added = VALUES(variation_product_added),
-                variation_product_last_modified = VALUES(variation_product_last_modified),
+            UPDATE erply_sync_dates
+            SET
+                variation_product_added = ?,
+                variation_product_last_modified = ?,
                 updated_at = NOW()
-        ", [$added, $modified]);
+            WHERE id = 1
+        ", [
+                $added,
+                $modified
+            ]);
         }
     }
 
