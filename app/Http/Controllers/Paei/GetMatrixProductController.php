@@ -48,8 +48,8 @@ class GetMatrixProductController extends Controller
         ini_set('memory_limit', '-1');
         info("Cron Called for Product Sync This is Old Version");
 
-        $syncType = $request->syncType ?? 'changeSince'; // can be changeSince or addedSince
-        $orderBy = $request->orderBy ?? 'changed';
+        $syncType = $request->syncType ?? 'addedSince'; // can be changeSince or addedSince
+        $orderBy = $request->orderBy ?? 'addedSince';
         $sortBy = $request->sortBy ?? 'asc';
         $limit = $request->limit ?? 500;
         $param = array(
