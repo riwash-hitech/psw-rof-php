@@ -369,12 +369,20 @@ class GetProductService implements UserOperationInterface
             $erplySyncDate = new ErplySyncDate();
         }
 
+        //last modified can be 0 for some products, in that case we will use added date for last modified
+        $lastModify = $product['lastModified'];
+
+        if ($product['lastModified'] == 0) {
+           $lastModify =  $product['added'];
+        }
+
         if ($type == 'MATRIX') {
             $erplySyncDate->matrix_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
-            $erplySyncDate->matrix_product_last_modified = Carbon::createFromTimestamp($product['lastModified'])->toDateTimeString();
+
+            $erplySyncDate->matrix_product_last_modified = Carbon::createFromTimestamp($lastModify)->toDateTimeString();
         } else {
             $erplySyncDate->variation_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
-            $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($product['lastModified'])->toDateTimeString();
+            $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($lastModify)->toDateTimeString();
         }
 
         $erplySyncDate->save();
