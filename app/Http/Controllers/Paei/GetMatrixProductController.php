@@ -76,6 +76,7 @@ class GetMatrixProductController extends Controller
             "sessionKey" => $this->api->client->sessionKey
          );
 
+         dump($param);
 
         //  dd($this->api->client);
 

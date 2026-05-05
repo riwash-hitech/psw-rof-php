@@ -376,6 +376,7 @@ class GetProductService implements UserOperationInterface
            $lastModify =  $product['added'];
         }
 
+
         $erplySyncDate->variation_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
         $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($lastModify)->toDateTimeString();
 
