@@ -378,10 +378,6 @@ class GetProductService implements UserOperationInterface
         }
 
 
-        dump('from Date()' , date('Y-m-d H:i:s', $product['added']) );
-
-        dump('from carbon()', Carbon::createFromTimestamp($product['added'])->toDateTimeString());
-
         $erplySyncDate->variation_product_added =
             date('Y-m-d H:i:s', $product['added']);
 
