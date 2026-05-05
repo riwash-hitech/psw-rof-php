@@ -376,14 +376,17 @@ class GetProductService implements UserOperationInterface
            $lastModify =  $product['added'];
         }
 
-        if ($type == 'MATRIX') {
-            $erplySyncDate->matrix_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
+        $erplySyncDate->variation_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
+        $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($lastModify)->toDateTimeString();
 
-            $erplySyncDate->matrix_product_last_modified = Carbon::createFromTimestamp($lastModify)->toDateTimeString();
-        } else {
-            $erplySyncDate->variation_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
-            $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($lastModify)->toDateTimeString();
-        }
+        // if ($type == 'MATRIX') {
+        //     // $erplySyncDate->matrix_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
+
+        //     // $erplySyncDate->matrix_product_last_modified = Carbon::createFromTimestamp($lastModify)->toDateTimeString();
+        // } else {
+        //     $erplySyncDate->variation_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
+        //     $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($lastModify)->toDateTimeString();
+        // }
 
         $erplySyncDate->save();
         // dump($erplySyncDate->matrix_product_added, $product['added']);
@@ -1134,28 +1137,21 @@ class GetProductService implements UserOperationInterface
 
         // Pick correct columns based on type
         if ($type === 'addedSince') {
-            $matrixDate = $erplyDate->matrix_product_added;
+            // $matrixDate = $erplyDate->matrix_product_added;
             $variationDate = $erplyDate->variation_product_added;
         } else { // 'changed' or 'modified'
-            $matrixDate = $erplyDate->matrix_product_last_modified;
+            // $matrixDate = $erplyDate->matrix_product_last_modified;
             $variationDate = $erplyDate->variation_product_last_modified;
         }
 
         // Handle nulls safely
-        if (!$matrixDate && !$variationDate) {
+        if ( !$variationDate) {
             return 0;
         }
 
-        if (!$matrixDate) {
-            return $variationDate;
-        }
-
-        if (!$variationDate) {
-            return $matrixDate;
-        }
 
         // Return the smaller (earlier) datetime
-        $l = $matrixDate > $variationDate ? $matrixDate : $variationDate;
+        $l = $variationDate;
 
         return strtotime($l);
     }
