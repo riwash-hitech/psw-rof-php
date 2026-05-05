@@ -38,7 +38,11 @@ class GetProductService implements UserOperationInterface
     public function saveUpdate($products)
     {
         $responseData = [];
+
+        $lastProduct = null;
         foreach ($products as $key =>  $p) {
+
+            $lastProduct = $p; // always overwrite → last loop remains
 
             if (isset($p['parentProductID']) &&  $p['parentProductID'] > 0   ) {
                 $this->variationSaveUpdate($p, $this->api->client->clientCode);
@@ -47,15 +51,13 @@ class GetProductService implements UserOperationInterface
                 $this->matrixSaveUpdate($p, $this->api->client->clientCode);
             }
 
-            // $responseData[] = [
-            //     'key ' => $key,
-            //     'type ' => $p['type'] ?? 'Unknown Type',
-            //     'id ' => $p['productID'] ?? null,
-            //     'message' => "Product with ID {$p['productID']} processed as " . ($p['type'] ?? 'Unknown Type'),
-            //     'attribute' => $p['attributes'] ?? null
-
-            // ];
         }
+
+        // ✅ after loop → use LAST product dynamically
+        if ($lastProduct) {
+            $this->setSyncDate($lastProduct, 'VARIATION');
+        }
+
 
 
         return response()->json(['status' => 200, 'message' => "Products fetched and processed successfully."]);
@@ -347,9 +349,6 @@ class GetProductService implements UserOperationInterface
             $old ? "Matrix Product Updated" : "Matrix Product Created"
         );
 
-        $this->setSyncDate($product, 'MATRIX');
-
-
         return $change;
     }
 
@@ -365,16 +364,20 @@ class GetProductService implements UserOperationInterface
         //last modified can be 0 for some products, in that case we will use added date for last modified
         $lastModify = $product['lastModified'];
 
+
         if ($product['lastModified'] == 0) {
            $lastModify =  $product['added'];
         }
-
 
         $erplySyncDate->variation_product_added =
             date('Y-m-d H:i:s', $product['added']);
 
         $erplySyncDate->variation_product_last_modified =
             date('Y-m-d H:i:s', $lastModify);
+
+        $erplySyncDate->save();
+
+
 
         // if ($type == 'MATRIX') {
         //     // $erplySyncDate->matrix_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
@@ -385,7 +388,6 @@ class GetProductService implements UserOperationInterface
         //     $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($lastModify)->toDateTimeString();
         // }
 
-        $erplySyncDate->save();
         // dump($erplySyncDate->matrix_product_added, $product['added']);
         // dump($erplySyncDate);
 
@@ -765,7 +767,6 @@ class GetProductService implements UserOperationInterface
         }
 
 
-        $this->setSyncDate($product, 'VARIATION');
 
         if (isset($product['parentProductID']) && $product['parentProductID'] !== '') {
 

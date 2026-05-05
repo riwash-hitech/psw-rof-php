@@ -77,7 +77,7 @@ class GetMatrixProductController extends Controller
             "sessionKey" => $this->api->client->sessionKey
          );
 
-dump($param);
+            dump($param);
         //  dd($this->api->client);
 
         //  print_r($param);
@@ -92,7 +92,9 @@ dump($param);
             return $this->service->saveUpdate($res['records']);
          }
 
-         dd('All Product Up-to-date');
+
+
+        dd('All Product Up-to-date');
 
     }
 
