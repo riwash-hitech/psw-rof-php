@@ -55,17 +55,18 @@ class GetProductService implements UserOperationInterface
                 }
             }
 
-            $responseData[] = [
-                'key ' => $key,
-                'type ' => $p['type'] ?? 'Unknown Type',
-                'id ' => $p['productID'] ?? null,
-                'message' => "Product with ID {$p['productID']} processed as " . ($p['type'] ?? 'Unknown Type'),
-                'attribute' => $p['attributes'] ?? null
+            // $responseData[] = [
+            //     'key ' => $key,
+            //     'type ' => $p['type'] ?? 'Unknown Type',
+            //     'id ' => $p['productID'] ?? null,
+            //     'message' => "Product with ID {$p['productID']} processed as " . ($p['type'] ?? 'Unknown Type'),
+            //     'attribute' => $p['attributes'] ?? null
 
-            ];
+            // ];
         }
 
-        return response()->json(['status' => 200, 'message' => "Products fetched and processed successfully.", 'data' => $responseData]);
+
+        return response()->json(['status' => 200, 'message' => "Products fetched and processed successfully."]);
     }
 
     public function saveUpdateByWebhook($product, $clientCode)
@@ -377,8 +378,15 @@ class GetProductService implements UserOperationInterface
         }
 
 
-        $erplySyncDate->variation_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
-        $erplySyncDate->variation_product_last_modified = Carbon::createFromTimestamp($lastModify)->toDateTimeString();
+        dump('from Date()' , date('Y-m-d H:i:s', $product['added']) );
+
+        dump('from carbon()', Carbon::createFromTimestamp($product['added'])->toDateTimeString());
+
+        $erplySyncDate->variation_product_added =
+            date('Y-m-d H:i:s', $product['added']);
+
+        $erplySyncDate->variation_product_last_modified =
+            date('Y-m-d H:i:s', $lastModify);
 
         // if ($type == 'MATRIX') {
         //     // $erplySyncDate->matrix_product_added = Carbon::createFromTimestamp($product['added'])->toDateTimeString();
