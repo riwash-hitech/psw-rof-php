@@ -64,7 +64,7 @@ class GetMatrixProductController extends Controller
             "getRelatedFiles" => 1,
             "getRelatedProducts" => 1,
             "getReplacementProducts" => 1,
-            // 'type' => 'MATRIX',
+            'type' => 'PRODUCT',
             // "productIDs" => '9585,61022,61030,61035,61043,61051,61060,61072,61083',
             // "searchAttributeName" => 'defaultStore',
             // "searchAttributeValue" => '3R390',
@@ -73,6 +73,7 @@ class GetMatrixProductController extends Controller
             // "getFIFOCost" => 1,
             // "getFIFOCost" => 1,
             // "active" => 1,
+            "includeMatrixVariations" =>0,
             "sessionKey" => $this->api->client->sessionKey
          );
 

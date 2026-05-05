@@ -40,19 +40,11 @@ class GetProductService implements UserOperationInterface
         $responseData = [];
         foreach ($products as $key =>  $p) {
 
-            if (isset($p['parentProductID']) &&  $p['parentProductID'] < 0   ) {
+            if (isset($p['parentProductID']) &&  $p['parentProductID'] > 0   ) {
+                $this->variationSaveUpdate($p, $this->api->client->clientCode);
 
-                $this->matrixSaveUpdate($p, $this->api->client->clientCode);
             } else {
-                // dd($p);
-
-                // continue;
-                // dd('variation',$p);
-                if (!str_contains($p["code"], "PSW") && $this->api->client->clientCode == 603303) {
-                    $this->variationSaveUpdate($p, $this->api->client->clientCode);
-                } else {
-                    $this->variationSaveUpdate($p, $this->api->client->clientCode);
-                }
+                $this->matrixSaveUpdate($p, $this->api->client->clientCode);
             }
 
             // $responseData[] = [
