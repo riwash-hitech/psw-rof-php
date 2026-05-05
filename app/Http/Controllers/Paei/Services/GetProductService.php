@@ -40,7 +40,7 @@ class GetProductService implements UserOperationInterface
         $responseData = [];
         foreach ($products as $key =>  $p) {
 
-            if ($p['type'] == "MATRIX") {
+            if (isset($p['parentProductID']) &&  $p['parentProductID'] < 0   ) {
 
                 $this->matrixSaveUpdate($p, $this->api->client->clientCode);
             } else {
