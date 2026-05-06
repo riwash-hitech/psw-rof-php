@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Paei;
 
-use App\Http\Controllers\Controller; 
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\Paei\Services\GetPaymentService;
-use App\Http\Controllers\Services\EAPIService; 
+use App\Http\Controllers\Services\EAPIService;
 
 class GetPaymentController extends Controller
 {
@@ -18,13 +18,13 @@ class GetPaymentController extends Controller
     }
 
     public function getPayments(){
-        
+
         if(env("isLive") == true){
             $dateNow = date('Y-m-d');
             if($dateNow >= '2023-08-14'){
                 info("Date Validation Failed");
             }else{
-                
+
                 info("Get Payment Cron Dismissed...Date");
                 return response("Get Sales Documents Cron Date");
             }
@@ -49,7 +49,7 @@ class GetPaymentController extends Controller
             // "deliveryTypeID" => 1,
             // "active" => 1,
             // "pageNo" => $this->page,
-            "changedSince" => $this->service->getLastUpdateDate(), 
+            "changedSince" => $this->service->getLastUpdateDate(),
         );
          $res = $this->api->sendRequest("getPayments", $param);
         //  dd($res);

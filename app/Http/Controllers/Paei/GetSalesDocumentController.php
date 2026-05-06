@@ -52,7 +52,7 @@ class GetSalesDocumentController extends Controller
         // dd($param);
         // die;
         $res = $this->api->sendRequest("getSalesDocuments", $param);
-        // dd($res);
+        dd($res);
         if($res['status']['errorCode'] == 0 && !empty($res['records'])){
             // print_r($res['records']);
             return $this->service->saveUpdate($res['records']);
