@@ -1496,6 +1496,7 @@ class SchoolApiService
                             })
                             ->first();
 
+
                         if (@$axDetails) {
                             $itemLocation = LiveItemLocation::where("warehouse", $axWarehouse->LocationID)->where("ERPLYSKU", @$axDetails->ERPLYSKU)->first();
                         }
@@ -1510,18 +1511,42 @@ class SchoolApiService
                             $soh = LiveItemByLocation::where("ICSC", @$axDetails->ICSC)->where('Warehouse', $currentWarehouse["warehouseCode"])->first();
                         }
 
+                        $primary = json_decode($axDetails['primaryJson'], true) ?? [];
+                        $secondary = json_decode($axDetails['secondaryJson'], true) ?? [];
+
+                        $warehouseCode = $currentWarehouse["warehouseCode"] ?? null;
+
+                        function getIssueByWarehouse($data, $warehouseCode)
+                        {
+                            foreach ($data as $item) {
+                                if (
+                                    ($item['location'] ?? null) == $warehouseCode &&
+                                    ($item['preferred'] ?? null) == "1"
+                                ) {
+                                    return $item['issuelocation'] ?? null;
+                                }
+                            }
+                            return null;
+                        }
+
+                        $issueLocation =
+                            getIssueByWarehouse($primary, $warehouseCode)
+                            ?? getIssueByWarehouse($secondary, $warehouseCode);
+
+
+
                         $lines = array(
-                            "ICSC" => @$axDetails->ITEMID . '-' . @$axDetails->ColourID . '-' . @$axDetails->CONFIGID,
+                            "ICSC" => @$axDetails->ITEMID ?? @$axDetails->erplyID  . '-' . @$axDetails->ColourID . '-' . @$axDetails->CONFIGID,
                             "ICSCBarcode" => @$axDetails->ITEMID . '' . @$axDetails->ColourID . '' . @$axDetails->SizeID,
                             "productName" => $sd->itemName,
                             "productName2" => @$axDetails->ItemName ?? $sd->itemName,
-                            "itemID" => @$axDetails->ITEMID,
+                            "itemID" => @$axDetails->ITEMID ?? @$axDetails->erplyID ,
                             "configID" => @$axDetails->CONFIGID,
                             "Size" => @$axDetails->SizeID,
                             "colourID" => @$axDetails->ColourID,
                             "barcode" => @$axDetails->EANBarcode ?? $sd->productID,
                             "qty" => $sd->amount,
-                            "location" => @$itemLocation->issueLocation ?? ''
+                            "location" => $issueLocation
                         );
 
                         if (@$soh) {
@@ -1651,6 +1676,16 @@ class SchoolApiService
         }
     }
 
+
+    function getPreferred($data)
+    {
+        foreach ($data as $item) {
+            if (($item['preferred'] ?? null) == "1") {
+                return $item['location'];
+            }
+        }
+        return null;
+    }
     //get payment status form erply and update
 
     private function updatePaymentStatus($ids, $currentWarehouse)

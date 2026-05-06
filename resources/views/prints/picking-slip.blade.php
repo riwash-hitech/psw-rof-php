@@ -27,7 +27,7 @@
                 }
             @endif
 
-            
+
             @media print {
                 hr.print-line {
                     display: block;
@@ -35,9 +35,9 @@
                     height: 1px;
                     background-color: black;
                 }
-               
 
-                
+
+
 
                 .contents .header{
                     color: grey ;
@@ -53,14 +53,14 @@
                 }
                 @page {
                     margin-top: 0.5cm; /* Adjust the margin-top value as needed */
-                    margin-left: 1cm; 
-                    margin-right: 1cm; 
+                    margin-left: 1cm;
+                    margin-right: 1cm;
                 }
 
             }
 
 
-           
+
             .div-inline {
                 display: inline-block;
                 border: 1px solid black;
@@ -78,9 +78,9 @@
 
         </style>
     </head>
-     
+
     <body style="text-align: center;" onload="window.print()" onfocus="window.close()">
-    @foreach($bulkPickingSlip as $data)   
+    @foreach($bulkPickingSlip as $data)
     <table  >
             <tbody>
                 <tr >
@@ -88,7 +88,7 @@
                         <p>{{ $data['info']->invoiceState == "FULFILLED" ? "PAID" : "UNPAID" }}</p>
                     </td>
                     <td width="40%">
-                        
+
                     </td>
                     <td width="5%">
                         <h6></h6>
@@ -107,7 +107,7 @@
                     <td width="35%" style="text-align:center;">
                     <!-- <img src="http://psw.synccare.com.au/psw_logo.jpg" width="{{ $data["info"]->paperSize == 1 ? 120 : 80 }}"> -->
                     <img src="http://psw.synccare.com.au/psw-uniform1.jpg" width="220">
-                        
+
                     </td>
                     <td width="30%">
                         <h1 style="font-size:{{ $data["info"]->paperSize == 1 ? 34 : 20 }}">Picking Slip</h1>
@@ -137,10 +137,10 @@
 
                     <td width="30%">
                         <div class="container" style="border: 1px solid black;padding: 3px;text-align: center;display: flex;justify-content: center;">
-                        
-                       
-                         {!! DNS1D::getBarcodeSVG((string)$data["info"]["number"], 'C128',1.3,25,'black', false) !!}  
-                            
+
+
+                         {!! DNS1D::getBarcodeSVG((string)$data["info"]["number"], 'C128',1.3,25,'black', false) !!}
+
                             <!-- <span>Order Number - 12345</span> -->
                         </div>
                     </td>
@@ -196,23 +196,23 @@
                 </tr>
 
                 <tr>
-                    <td colspan="4"> 
+                    <td colspan="4">
                         <div class="container" style="border-top: 1px solid black;padding: 0px;text-align: left;text-decoration: underline;font-size: 16px;font-weight: bold;height: 1px;">
-                            
+
                        </div>
                     </td>
                 </tr>
 
                 <tr>
-                    <td colspan="3"> 
+                    <td colspan="3">
                         <div class="container" style="border: 1px solid black;padding: 1px;text-align: left;text-decoration: underline;font-size: 16px;font-weight: bold;">
-                             Items To Be Supplied TODAY 
+                             Items To Be Supplied TODAY
                             <!-- <span>BARCODE</span><br> -->
                             <!-- <span>Picker Name : </span> -->
                         </div>
                     </td>
 
-                    <td > 
+                    <td >
                          <input type="checkbox" /> <label>Back Order</label>
                     </td>
 
@@ -244,7 +244,7 @@
                         SOH
                     </td>
                 </tr>
-                
+
                 @foreach($data["productDetails"] as $p)
                 <tr>
                     <td width="25%">
@@ -252,7 +252,7 @@
                              {{ $p['ICSC']  }}
                             <!-- <span>BARCODE</span><br> -->
                             <!-- <span>Picker Name : </span> -->
-                        </div> 
+                        </div>
                     </td>
                     <td width="5%">
                         <div class="container" style="border: 1px solid black;padding: 1px;text-align: center;font-size:{{ $data["info"]->paperSize == 1 ? 16 : 12 }}">
@@ -261,22 +261,22 @@
                             <!-- <span>Picker Name : </span> -->
                         </div>
                     </td>
-                    <td width="30%" rowspan="2" style="vertical-align: top;text-align: left;font-size:{{ $data["info"]->paperSize == 1 ? 16 : 12 }}"> 
+                    <td width="30%" rowspan="2" style="vertical-align: top;text-align: left;font-size:{{ $data["info"]->paperSize == 1 ? 16 : 12 }}">
                         {{ $p['productName'] }}
                     </td>
 
-                    <td width="20%"  > 
+                    <td width="20%"  >
                         <div class="div-inline" style="font-size:{{ $data["info"]->paperSize == 1 ? 16 : 12 }}">
-                        {{ (int)$p['qty'] }} 
+                        {{ (int)$p['qty'] }}
                           </div>
                           <div class="div-inline" style="border: 1px dashed grey !important;">
                                  &nbsp;
                           </div>
-                        
+
                     </td>
                     <td width="15%">
                         <div class=" " style="border: 1px solid black;padding: 1px;text-align: center;">
-                         
+
                         @if(@$p['location'])
                             @if($p['location'] == "DEF")
                                 &nbsp;
@@ -295,7 +295,7 @@
                             @else
                                 &nbsp;
                             @endif
-                            
+
 
                         </div>
                     </td>
@@ -304,47 +304,47 @@
                 <tr>
                     <td width="25%" colspan="2">
                         <div class="container" style="border: 0px solid black;padding: 1px;text-align: left;">
-                        {!! DNS1D::getBarcodeSVG((string)$p['barcode'], 'C128',1.3,25,'black', false); !!} 
-                        </div> 
+                        {!! DNS1D::getBarcodeSVG((string)$p['barcode'], 'C128',1.3,25,'black', false); !!}
+                        </div>
                     </td>
-                     
+
                     <td width="15%" colspan="3" style="text-align: center;">
                          Bulk Qty : 0
                     </td>
-                     
+
                 </tr>
 
                 @endforeach
-                 
-  
 
-                <td colspan="6"> 
+
+
+                <td colspan="6">
                     <div class="container" style="border-top: 1px solid black;padding: 0px;text-align: left;text-decoration: underline;font-size: 16px;font-weight: bold;height: 1px;">
-                        
+
                    </div>
                 </td>
 
                 <tr class="footer">
                     <td  colspan="3" style="text-align: right;">
-                           Cross Check Total Qty: 
+                           Cross Check Total Qty:
                     </td>
-                    
 
-                    <td width="20%"  > 
+
+                    <td width="20%"  >
                         <div class="div-inline">
                               {{ $data["totQty"] }}
                           </div>
                           <div class="div-inline" style="border: 1px dashed grey !important">
-                             &nbsp; 
+                             &nbsp;
                           </div>
-                        
+
                     </td>
-                    
+
                 </tr>
 
-                
 
-                
+
+
             </tbody>
         </table>
 

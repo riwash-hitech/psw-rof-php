@@ -78,7 +78,7 @@ class GetMatrixProductController extends Controller
          );
 
             dump($param);
-        //  dd($this->api->client);
+         dd($this->api->client);
 
         //  print_r($param);
         //  die;

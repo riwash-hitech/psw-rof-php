@@ -10,7 +10,7 @@ use App\Models\PAEI\MessageNotification;
 use App\Models\PAEI\SalesDocument;
 use App\Models\PAEI\SalesDocumentDetail;
 use App\Models\PAEI\Warehouse;
-use App\Models\PswClientLive\Local\LiveWarehouseLocation; 
+use App\Models\PswClientLive\Local\LiveWarehouseLocation;
 use App\Traits\ResponseTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -47,7 +47,7 @@ class WarehouseApiService{
         if(isset($req->strictFilter) == 0){
             $req->strictFilter = true;
         }
-         
+
 
         $pagination = $req->recordsOnPage == '' ? 20 : $req->recordsOnPage;
         $requestData = $req->except(Except::$except);
@@ -55,13 +55,13 @@ class WarehouseApiService{
         $warehouses = $this->warehouse->where(function ($q) use ($requestData, $req) {
             $q->where('clientCode', $this->api->client->clientCode);
             foreach ($requestData as $keys => $value) {
-                if ($value != null) { 
+                if ($value != null) {
                     if($req->strictFilter == true){
                         $q->Where($keys, $value);
                     }else{
                         $q->Where($keys, 'LIKE', '%'.$value.'%');
                     }
-                    // 'like', '%' . $value . '%'); 
+                    // 'like', '%' . $value . '%');
                 }
             }
         })->orderBy($req->sort_by, $req->direction)->paginate($pagination);
@@ -80,7 +80,7 @@ class WarehouseApiService{
         if(isset($req->strictFilter) == 0){
             $req->strictFilter = true;
         }
-         
+
 
         $pagination = $req->recordsOnPage == '' ? 20 : $req->recordsOnPage;
         $requestData = $req->except(Except::$except);
@@ -88,13 +88,13 @@ class WarehouseApiService{
         $warehouses = LiveWarehouseLocation::where(function ($q) use ($requestData, $req) {
             // $q->where('clientCode', $this->api->client->clientCode);
             foreach ($requestData as $keys => $value) {
-                if ($value != null) { 
+                if ($value != null) {
                     if($req->strictFilter == true){
                         $q->Where($keys, $value);
                     }else{
                         $q->Where($keys, 'LIKE', '%'.$value.'%');
                     }
-                    // 'like', '%' . $value . '%'); 
+                    // 'like', '%' . $value . '%');
                 }
             }
         })->orderBy($req->sort_by, $req->direction)->paginate($pagination);
@@ -136,7 +136,7 @@ class WarehouseApiService{
 
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
 
         $pagination = $req->recordsOnPage ? $req->recordsOnPage : 20;
@@ -148,7 +148,7 @@ class WarehouseApiService{
 
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
 
         $customExcept = Except::$except;
@@ -222,15 +222,15 @@ class WarehouseApiService{
                         DB::raw("CASE WHEN '". env('isLive') . "' THEN CONCAT('https://www.psw.synccare.com.au/php/getPickingSlip?env=LIVE&warehouseID=', newsystem_sales_documents.warehouseID,'&salesDocumentID=',newsystem_sales_documents.salesDocumentID) ELSE CONCAT('https://pswstaging.synccare.com.au/php/public/getPickingSlip?env=TEST&warehouseID=', newsystem_sales_documents.warehouseID,'&salesDocumentID=',newsystem_sales_documents.salesDocumentID) END as pickingSlipLink")
                     ]
                 )
-                
+
                 ->orderBy("salesDocumentID", 'asc')
                 ->paginate($pagination);
                 // ->select(["newsystem_sales_documents.*", "SalesDetails.productID as erplyID","SalesDetails.*"])
-                // ->get();   
+                // ->get();
 
-                return $this->successWithData($orders); 
+                return $this->successWithData($orders);
             }
-            
+
             $orders = SalesDocument:://with("SalesDetails.axRelation")
                 with([
                     'SalesDetails' => function ($salesDetailsQuery) use ($currentWarehouse) {
@@ -285,12 +285,12 @@ class WarehouseApiService{
                 ->orderBy("salesDocumentID", 'asc')
                 ->paginate($pagination);
                 // ->select(["newsystem_sales_documents.*", "SalesDetails.productID as erplyID","SalesDetails.*"])
-                // ->get();   
+                // ->get();
 
-            return $this->successWithData($orders); 
+            return $this->successWithData($orders);
         }
-        
-        
+
+
 
         $orders = SalesDocument:://with("SalesDetails.axRelation")
                 with([
@@ -304,7 +304,7 @@ class WarehouseApiService{
                 ])
                 ->with(["Customer" => function($q) use($currentWarehouse){
                     $q->where("clientCode", $currentWarehouse["clientCode"]);
-                } 
+                }
                 ])
                 ->with(['payments' => function($q) use($currentWarehouse){
                     $q->where("sum",'>', 0)
@@ -341,32 +341,32 @@ class WarehouseApiService{
                 ->where(function ($q) use ($requestData, $req) {
                     // $q->where('clientCode', $this->api->client->clientCode);
                     foreach ($requestData as $keys => $value) {
-                        if ($value != null) { 
+                        if ($value != null) {
                             if($req->strictFilter == true){
                                 $q->Where($keys, $value);
                             }else{
                                 $q->Where($keys, 'LIKE', '%'.$value.'%');
                             }
-                            // 'like', '%' . $value . '%'); 
+                            // 'like', '%' . $value . '%');
                         }
                     }
                 })
                 ->orderBy($req->sort_by, $req->direction)
                 ->paginate($pagination);
                 // ->select(["newsystem_sales_documents.*", "SalesDetails.productID as erplyID","SalesDetails.*"])
-                
+
                 // ->get();
-        
+
         return $this->successWithData($orders);
     }
 
-   
+
 
     public function orderLineItemOnly($req){
 
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
 
         //first getting list of orders
@@ -384,7 +384,7 @@ class WarehouseApiService{
                 ->where("readyToFulfill", 0)
                 ->pluck("salesDocumentID")
                 ->toArray();
-        
+
         $lines = SalesDocumentDetail::with("axRelation")
                 ->where("clientCode", $currentWarehouse["clientCode"])
                 ->whereIn("salesDocumentID", $orders)
@@ -392,7 +392,7 @@ class WarehouseApiService{
                 ->groupBy("productID")
                 // ->paginate($pagination);
                 ->get();
-        
+
 
         return $this->successWithData($lines);
     }
@@ -413,8 +413,8 @@ class WarehouseApiService{
                 ]
             );
 
-            //here handle send sms and email 
-            
+            //here handle send sms and email
+
 
             return $this->successWithMessage("Order Fullfilled Successfully.");
         }
@@ -424,24 +424,24 @@ class WarehouseApiService{
 
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
 
         if(isset($req->id) == 1 && $req->id != ''){
 
             $sd = SalesDocument::where("id", $req->id)->first();
-            
+
             $customer = Customer::where("clientCode", $sd->clientCode)->where("customerID", $sd->clientID)->first();
             // dd($sd, $customer);
             //now updating readytofulfill = 1
             $sd->readyToFulfill = 1;
             $sd->readyToFulfillDateTime = Carbon::now(new \DateTimeZone('Australia/Sydney'))->format('Y-m-d H:i:s');
             $sd->save();
-             
-        
+
+
             $isSendSMS = @$req->sendSms ? @$req->sendSms : 0;
             info("************************************************************************* sms ". $isSendSMS);
-            //here handle send sms and email 
+            //here handle send sms and email
             // if($isSendSMS == 0){
             //     dd("Hello im False");
             // }
@@ -452,7 +452,7 @@ class WarehouseApiService{
 
                 // dd($isSendSMS);
 
-                $content = 'Hi '.$customer->fullName.', 
+                $content = 'Hi '.$customer->fullName.',
 Your Order Number '.$sd->number.' is ready to be picked up from '.$sd->warehouseName.'.
 Thank You';
 
@@ -468,7 +468,7 @@ Thank You';
                     "customerName" => $sd->clientName,
                     "pendingProcess" => 1,
                     "destination_number" => $customer->mobile,
-                    "content" => $content 
+                    "content" => $content
                 ];
 
                 MessageNotification::updateOrCreate(
@@ -504,7 +504,7 @@ Thank You';
 
                 if(1 == 2){
                     $contentEmail = '<h3>Web orders,</h3>
-                    <p> Hi '.$customer->fullName.', Order Number '.$sd->number.' is ready for collection at 
+                    <p> Hi '.$customer->fullName.', Order Number '.$sd->number.' is ready for collection at
                     '.$sd->warehouseName.'. Pickup Mon-Fri {9am-5pm} & Sat {10am-12:30pm}</p>';
 
                 }
@@ -520,7 +520,7 @@ Thank You';
                     "message" => $contentEmail,
                     // "message" => $contentEmail,
                     "warehouseID" => $sd->warehouseID
-                ];  
+                ];
 
                 EmailNotification::updateOrcreate(
                     [
@@ -537,19 +537,19 @@ Thank You';
     }
 
     public function fulfilledOrders($req ){
-        
+
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
-        
+
         if(isset($req->warehouseID) == 0 && $req->warehouseID == ''){
             return $this->failWithMessage("Invalid Warehouse ID!");
-        }   
-    
+        }
+
         $date = @$req->date ? @$req->date : "1Day";
-       
-        
+
+
         $targetDate = date("Y-m-d");
         if (isset($date) && in_array($date, ["1Day", "3Day", "5Day", "7Day"])) {
             $daysToAdd = intval(substr($date, 0, -3)); // Extract the numeric part from the date string
@@ -559,14 +559,14 @@ Thank You';
             // }
 
             $targetDate = date("Y-m-d", strtotime("-$daysToAdd days")); // Calculate the target date
-           
+
             // $q->where("date", ">=", $targetDate);
         }
         // dd($targetDate);
-        
+
             $pagination = @$req->recordsOnPage ? @$req->recordsOnPage : 20;
-       
-        
+
+
         $orders = SalesDocument:://with("SalesDetails.axRelation")
                 with([
                     'SalesDetails' => function ($salesDetailsQuery) use ($currentWarehouse) {
@@ -588,7 +588,7 @@ Thank You';
                 ->where("readyToFulfill", 1)
                 ->where("date", ">=", $targetDate)
                 // ->where(function($q) use ($req){
-                    
+
                 // })
                 ->select('id','salesDocumentID','type','warehouseID','warehouseName','number','date','time','clientID','clientName','clientEmail','total','attributes',
                     'created_at',
@@ -601,7 +601,7 @@ Thank You';
                 ->paginate($pagination);
                 // ->select(["newsystem_sales_documents.*", "SalesDetails.productID as erplyID","SalesDetails.*"])
                 // ->get();
-       
+
         return $this->successWithData($orders);
     }
 
@@ -609,24 +609,24 @@ Thank You';
 
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
-        
-        
+
+
         if(isset($req->warehouseID) == 0 && $req->warehouseID == ''){
             return $this->failWithMessage("Invalid Warehouse ID!");
-        } 
-        
+        }
+
         if(isset($req->direction) == 0){
             $req->direction = 'asc';
         }
         if(isset($req->sort_by) == 0){
             $req->sort_by = 'added';
-        } 
+        }
 
-        
-        
-        $pagination = @$req->recordsOnPage ? @$req->recordsOnPage : 20; 
+
+
+        $pagination = @$req->recordsOnPage ? @$req->recordsOnPage : 20;
         // DB::connection('mysql2');
         $orders = SalesDocument:://with("SalesDetails.axRelation")
                 with([
@@ -655,7 +655,7 @@ Thank You';
                 ->where("warehouseID", $currentWarehouse["warehouseID"])
                 ->where("deleted", 0)
                 ->where("readyToFulfill", 1)
-                ->where("pickedOrder", 0) 
+                ->where("pickedOrder", 0)
                 ->select('id','salesDocumentID','type','warehouseID','warehouseName','number','date','time','clientID','clientName','clientEmail','total','attributes',
                     'created_at',
                     'isExpress',
@@ -677,9 +677,9 @@ Thank You';
 
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
-        
+
 
         if($req->ids){
             $bulkOrder = explode(",", $req->ids);
@@ -695,14 +695,14 @@ Thank You';
             }
 
             return $this->successWithMessage("Order Picked Successfully.");
-            
+
         }
-        
+
     }
 
     public function filterOrder($req){
 
-        
+
 
         $version = $req->version ? $req->version : '';
         if($version == "v2"){
@@ -711,13 +711,13 @@ Thank You';
         }
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
         // return $this->checkWarehouseID($req);
 
         $filterData = $req->except(['warehouseID','keywords','page','strictFilter','version']);
         $pagination = $req->recordsOnPage ? $req->recordsOnPage : 5;
-         
+
         $datas = SalesDocument:://with("SalesDetails.axRelation")
                 with([
                     'SalesDetails' => function ($salesDetailsQuery) use ($currentWarehouse) {
@@ -728,7 +728,7 @@ Thank You';
                         }]);
                     }
                 ])
-                ->with("Customer") 
+                ->with("Customer")
                 ->with(['payments' => function($q) use($currentWarehouse){
                     $q->where("sum",'>', 0)
                     ->where("clientCode", $currentWarehouse["clientCode"]);
@@ -737,15 +737,17 @@ Thank You';
                 ->where("isSynccarePos", 1)
                 ->where("clientCode", $currentWarehouse["clientCode"])
                 ->where("warehouseID", $currentWarehouse["warehouseID"])
-                ->where("deleted", 0) 
+                ->where("deleted", 0)
                 ->when($req->keywords != '', function ($q) use($req) {
                     return $q->where('number', $req->keywords)
                             ->orWhere('clientName', 'like', '%'.$req->keywords.'%');
                 })
                 ->where(function ($q) use ($filterData, $req) {
+
+
                     // $q->where('clientCode', $this->api->client->clientCode);
                     foreach ($filterData as $keys => $value) {
-                        
+
                         if ($value != null )  {
 
                             if($keys == "isExpress" && $value == 2){
@@ -756,10 +758,10 @@ Thank You';
                                 }else{
                                     $q->Where($keys, 'LIKE', '%'.$value.'%');
                                 }
-                            }  
+                            }
                         }
                     }
-                }) 
+                })
                 ->select(
                     [
                         'id',
@@ -791,20 +793,20 @@ Thank You';
                 ->paginate($pagination);
         // dd($datas);
         return $this->successWithData($datas);
-        
+
     }
 
     public function filterOrderV2($req){
         dd("API V2");
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
         // return $this->checkWarehouseID($req);
 
         $filterData = $req->except(['warehouseID','keywords','page','strictFilter', 'version']);
         $pagination = $req->recordsOnPage ? $req->recordsOnPage : 5;
-         
+
         $datas = SalesDocument:://with("SalesDetails.axRelation")
                 with([
                     'SalesDetails' => function ($salesDetailsQuery) use ($currentWarehouse) {
@@ -814,12 +816,12 @@ Thank You';
                         }]);
                     }
                 ])
-                ->with("Customer") 
+                ->with("Customer")
                 ->where("type", "ORDER")
                 ->where("isSynccarePos", 1)
                 ->where("clientCode", $currentWarehouse["clientCode"])
                 ->where("warehouseID", $currentWarehouse["warehouseID"])
-                ->where("deleted", 0) 
+                ->where("deleted", 0)
                 ->when($req->keywords != '', function ($q) use($req) {
                     return $q->where('number', $req->keywords)
                             ->orWhere('clientName', 'like', '%'.$req->keywords.'%');
@@ -827,7 +829,7 @@ Thank You';
                 ->where(function ($q) use ($filterData, $req) {
                     // $q->where('clientCode', $this->api->client->clientCode);
                     foreach ($filterData as $keys => $value) {
-                        
+
                         if ($value != null )  {
 
                             if($keys == "isExpress" && $value == 2){
@@ -838,10 +840,10 @@ Thank You';
                                 }else{
                                     $q->Where($keys, 'LIKE', '%'.$value.'%');
                                 }
-                            }  
+                            }
                         }
                     }
-                }) 
+                })
                 ->select(
                     [
                         'id',
@@ -870,16 +872,16 @@ Thank You';
                 ->paginate($pagination);
         // dd($datas);
         return $this->successWithData($datas);
-        
+
     }
 
     public function expressOrder($req){
 
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
-        
+
         $customExcept = Except::$except;
         $customExcept[] = "warehouseID";
         $requestData = $req->except($customExcept);
@@ -893,8 +895,8 @@ Thank You';
 
         // if(isset($req->warehouseID) == 0 && $req->warehouseID == ''){
         //     return $this->failWithMessage("Invalid Warehouse ID!");
-        // }   
- 
+        // }
+
         $pagination = $req->recordsOnPage ? $req->recordsOnPage : 20;
         $orders = SalesDocument:://with("SalesDetails.axRelation")
                 with([
@@ -920,8 +922,8 @@ Thank You';
                 // ->where("warehouseID", $req->warehouseID)
                 ->where("warehouseID", $currentWarehouse["warehouseID"])
                 ->where("deleted", 0)
-                ->where("readyToFulfill", 0) 
-                ->where("isExpress", 1) 
+                ->where("readyToFulfill", 0)
+                ->where("isExpress", 1)
                 ->select('id','salesDocumentID','type','warehouseID','warehouseName','number','date','time','clientID','clientName','clientEmail','total','attributes',
                     'created_at',
                     'isExpress',
@@ -936,19 +938,19 @@ Thank You';
                 )->where(function ($q) use ($requestData, $req) {
                     // $q->where('clientCode', $this->api->client->clientCode);
                     foreach ($requestData as $keys => $value) {
-                        if ($value != null) { 
+                        if ($value != null) {
                             if($req->strictFilter == true){
                                 $q->Where($keys, $value);
                             }else{
                                 $q->Where($keys, 'LIKE', '%'.$value.'%');
                             }
-                            // 'like', '%' . $value . '%'); 
+                            // 'like', '%' . $value . '%');
                         }
                     }
                 })
                 ->orderBy($req->sort_by, $req->direction)
-                ->paginate($pagination); 
-        
+                ->paginate($pagination);
+
         return $this->successWithData($orders);
     }
 
@@ -956,42 +958,42 @@ Thank You';
 
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
-        
+
 
         if(isset($req->warehouseID) == 0 && $req->warehouseID == ''){
             return $this->failWithMessage("Invalid Warehouse ID!");
         }
 
 
-        $date = "1Day"; 
+        $date = "1Day";
         $targetDate = date("Y-m-d");
         if (isset($date) && in_array($date, ["1Day", "3Day", "5Day", "7Day"])) {
             $daysToAdd = intval(substr($date, 0, -3)); // Extract the numeric part from the date string
-            $daysToAdd = $daysToAdd - 1; 
+            $daysToAdd = $daysToAdd - 1;
             $targetDate = date("Y-m-d", strtotime("-$daysToAdd days")); // Calculate the target date
-        
+
             // $q->where("date", ">=", $targetDate);
         }
 
         $smsNotif = MessageNotification::where("clientCode", $currentWarehouse["clientCode"])->where("warehouseID", $currentWarehouse["warehouseID"])->count();
         $emailNotif = EmailNotification::where("clientCode", $currentWarehouse["clientCode"])->where("warehouseID", $currentWarehouse["warehouseID"])->count();
 
-        
+
         // $data = SalesDocument::select(
-        //     DB::raw('COALESCE(sum(case when readyToFulfill = 0 and isExpress = 0 and isPrinted = 0 then 1 else 0 end), 0) as warehouseOrder'),  
-        //     DB::raw('COALESCE(sum(case when isPrinted = 1 and readyToFulfill = 0 then 1 else 0 end), 0) as preparingOrder'),  
+        //     DB::raw('COALESCE(sum(case when readyToFulfill = 0 and isExpress = 0 and isPrinted = 0 then 1 else 0 end), 0) as warehouseOrder'),
+        //     DB::raw('COALESCE(sum(case when isPrinted = 1 and readyToFulfill = 0 then 1 else 0 end), 0) as preparingOrder'),
         //     DB::raw('COALESCE(sum(case when date >= "' . $targetDate . '" and type = "ORDER" and isSynccarePos = 1 and readyToFulfill = 1  then 1 else 0 end), 0) as fulfilledOrder'),
         //     DB::raw('COALESCE(sum(case when readyToFulfill = 0 and  isExpress = 1 and isPrinted = 0 then 1 else 0 end), 0) as expressOrder'),
         //     DB::raw('COALESCE(sum(case when readyToFulfill = 1 and  pickedOrder = 0 then 1 else 0 end), 0 ) as readyToBePickedOrder'),
         //     // DB::raw('MAX(salesDocumentID) as latestSalesDocumentID'),
-        //     // DB::table("newsystem_inventory_transfers")->where("warehouseFromID", $req->warehouseID)->orWhere("warehouseToID", $req->warehouseID)->count() 
+        //     // DB::table("newsystem_inventory_transfers")->where("warehouseFromID", $req->warehouseID)->orWhere("warehouseToID", $req->warehouseID)->count()
         //     DB::raw('
         //         MAX(CASE WHEN isExpress = 0 THEN salesDocumentID END) as latestSalesDocumentID,
         //         MAX(CASE WHEN isExpress = 1 THEN salesDocumentID END) as latestExpressSalesDocumentID
         //     ')
-        // ) 
+        // )
         $data = SalesDocument::select(
             DB::raw('
                 COALESCE(SUM(CASE WHEN readyToFulfill = 0 AND isExpress = 0 AND isPrinted = 0 THEN 1 ELSE 0 END), 0) as warehouseOrder,
@@ -1002,7 +1004,7 @@ Thank You';
                 MAX(CASE WHEN isExpress = 0 THEN salesDocumentID ELSE NULL END) as latestSalesDocumentID,
                 MAX(CASE WHEN isExpress = 1 THEN salesDocumentID ELSE NULL END) as latestExpressSalesDocumentID
             ')
-        ) 
+        )
         ->addBinding([$targetDate], 'select')
         ->where("type", "ORDER")
         ->where("isSynccarePos", 1)
@@ -1059,15 +1061,15 @@ Thank You';
         // }else{
         //     $resultArray['latestExpressSalesDocumentID'] = 0;
         // }
-        
+
         // if($latestInstore){
         //     $resultArray['latestSalesDocumentID'] = $latestInstore->latestSalesDocumentID;
         // }else{
         //     $resultArray['latestSalesDocumentID'] = 0;
         // }
 
-        
-        
+
+
         return $this->successWithData($resultArray);
         // dd($data);
     }
@@ -1076,7 +1078,7 @@ Thank You';
 
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
 
         $limit = $req->recordsOnPage ? $req->recordsOnPage : 20;
@@ -1091,7 +1093,7 @@ Thank You';
 
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
 
         $limit = $req->recordsOnPage ? $req->recordsOnPage : 20;
@@ -1100,6 +1102,6 @@ Thank You';
         return $this->successWithDataAndMessage("Inventory Transfer From Location", $datas);
 
     }
-    
+
 
 }
