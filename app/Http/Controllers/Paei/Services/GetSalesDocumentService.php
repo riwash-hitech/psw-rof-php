@@ -372,7 +372,7 @@ class GetSalesDocumentService
     {
 
         //now getting lastmodifed date from erply sync table
-        $latest = ErplySync::where("id", 1)->first()->psw_salesdoc;
+        $latest = ErplySync::first()->psw_salesdoc;
 
         if ($latest) {
             return strtotime($latest);
