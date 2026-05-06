@@ -54,10 +54,10 @@ class GetProductService implements UserOperationInterface
         }
 
         // ✅ after loop → use LAST product dynamically
-        // dump('last product',$lastProduct);
-        // if ($lastProduct) {
-        //     $this->setSyncDate($lastProduct, 'VARIATION');
-        // }
+        dump('last product',$lastProduct);
+        if ($lastProduct) {
+            $this->setSyncDate($lastProduct, 'VARIATION');
+        }
 
 
 
@@ -341,9 +341,7 @@ class GetProductService implements UserOperationInterface
             ['ERPLYFLAG' => $erplyFlag, 'erplyID' => $itemId],
             $fields
         );
-        //set time
 
-        $this->setSyncDate($product, 'VARIATION');
 
         // Log
         $this->letsLog->setChronLog(
@@ -800,9 +798,6 @@ class GetProductService implements UserOperationInterface
 
         }
 
-        //set time
-
-        $this->setSyncDate($product, 'VARIATION');
 
         // ✅ LOG
         $this->letsLog->setChronLog(
