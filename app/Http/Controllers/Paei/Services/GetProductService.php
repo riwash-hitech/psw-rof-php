@@ -54,6 +54,7 @@ class GetProductService implements UserOperationInterface
         }
 
         // ✅ after loop → use LAST product dynamically
+        dump('last product',$lastProduct);
         if ($lastProduct) {
             $this->setSyncDate($lastProduct, 'VARIATION');
         }
@@ -374,6 +375,10 @@ class GetProductService implements UserOperationInterface
 
         $erplySyncDate->variation_product_last_modified =
             date('Y-m-d H:i:s', $lastModify);
+
+            $erplySyncDate->last_sync =  $lastModify;
+
+            dump($lastModify);
 
         $erplySyncDate->save();
 
@@ -1139,7 +1144,7 @@ class GetProductService implements UserOperationInterface
             $variationDate = $erplyDate->variation_product_added;
         } else { // 'changed' or 'modified'
             // $matrixDate = $erplyDate->matrix_product_last_modified;
-            $variationDate = $erplyDate->variation_product_last_modified;
+            $variationDate = $erplyDate->last_sync;
         }
 
         // Handle nulls safely
@@ -1150,8 +1155,8 @@ class GetProductService implements UserOperationInterface
 
         // Return the smaller (earlier) datetime
         $l = $variationDate;
-
-        return strtotime($l);
+return $l;
+        // return strtotime($l);
     }
 
     // public function getLastUpdateDate()
