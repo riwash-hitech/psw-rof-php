@@ -83,6 +83,7 @@ class GetMatrixProductController extends Controller
         //  die;
 
         $res = $this->api->sendRequest("getProducts", $param,0,0,0);
+        dump($res['status'],'API response status');
         if(isset($request->debug) && $request->debug == 1){
             dd($res,$param);
         }
