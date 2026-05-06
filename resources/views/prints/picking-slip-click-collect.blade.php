@@ -101,7 +101,7 @@
                 <tr style="width:100%">
                     <td width="25%" colspan="2" style="text-align: center;">
                         <!-- <img src="http://psw.synccare.com.au/psw_logo.jpg" width="120"> -->
-                        <img src="http://psw.synccare.com.au/psw-uniform1.jpg" width="220">
+                        <img src="https://psw.synccare.com.au/psw-uniform1.jpg" width="220">
                     </td>
 
 
