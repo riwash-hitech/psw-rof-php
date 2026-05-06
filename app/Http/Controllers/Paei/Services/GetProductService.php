@@ -54,10 +54,10 @@ class GetProductService implements UserOperationInterface
         }
 
         // ✅ after loop → use LAST product dynamically
-        dump('last product',$lastProduct);
-        if ($lastProduct) {
-            $this->setSyncDate($lastProduct, 'VARIATION');
-        }
+        // dump('last product',$lastProduct);
+        // if ($lastProduct) {
+        //     $this->setSyncDate($lastProduct, 'VARIATION');
+        // }
 
 
 
@@ -341,7 +341,9 @@ class GetProductService implements UserOperationInterface
             ['ERPLYFLAG' => $erplyFlag, 'erplyID' => $itemId],
             $fields
         );
+        //set time
 
+        $this->setSyncDate($product, 'VARIATION');
 
         // Log
         $this->letsLog->setChronLog(
@@ -375,10 +377,6 @@ class GetProductService implements UserOperationInterface
 
         $erplySyncDate->variation_product_last_modified =
             date('Y-m-d H:i:s', $lastModify);
-
-            $erplySyncDate->last_sync =  $lastModify;
-
-            dump($lastModify);
 
         $erplySyncDate->save();
 
@@ -802,6 +800,10 @@ class GetProductService implements UserOperationInterface
 
         }
 
+        //set time
+
+        $this->setSyncDate($product, 'VARIATION');
+
         // ✅ LOG
         $this->letsLog->setChronLog(
             $old ? json_encode($old, true) : '',
@@ -1144,7 +1146,7 @@ class GetProductService implements UserOperationInterface
             $variationDate = $erplyDate->variation_product_added;
         } else { // 'changed' or 'modified'
             // $matrixDate = $erplyDate->matrix_product_last_modified;
-            $variationDate = $erplyDate->last_sync;
+            $variationDate = $erplyDate->variation_product_last_modified;
         }
 
         // Handle nulls safely
@@ -1155,8 +1157,8 @@ class GetProductService implements UserOperationInterface
 
         // Return the smaller (earlier) datetime
         $l = $variationDate;
-return $l;
-        // return strtotime($l);
+
+        return strtotime($l);
     }
 
     // public function getLastUpdateDate()
