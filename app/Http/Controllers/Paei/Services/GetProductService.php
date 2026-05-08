@@ -219,6 +219,7 @@ class GetProductService implements UserOperationInterface
         $productType          = $this->nullIfEmpty($attr['ProductType'] ?? null);
         $productSubType       = $this->nullIfEmpty($attr['ProductSubType'] ?? null);
         $supplier             = $this->nullIfEmpty($attr['Supplier'] ?? ($product['supplierName'] ?? null));
+        $mfrCode             = $product['supplierCode'] ?? null;
         $gender               = $this->nullIfEmpty($attr['Gender'] ?? null);
         $categoryName         = $this->nullIfEmpty($attr['CategoryName'] ?? null);
         $itemWeightGrams      = $this->nullIfEmpty($attr['ItemWeightGrams'] ?? null);
@@ -334,7 +335,8 @@ class GetProductService implements UserOperationInterface
             'checkErply' => $checkErply,
             'erplyDeleted' => $erplyDeleted,
             'erplyAttributes' => json_encode($attributes ?? []),
-            'erplyStatus' => $status
+            'erplyStatus' => $status,
+            'mfrCode' => $mfrCode
         ];
         // dd(LiveProductMatrix::where('websku', '19855_4400004_0')->first());
         // Update or create

@@ -463,6 +463,7 @@ class SchoolApiService
                     "SchoolID",
                     "imageUrl",
                     "Category_Name",
+                    "mfrCode",
                     "PSWPRICELISTITEMCATEGORY",
                 ]
             );
@@ -510,6 +511,7 @@ class SchoolApiService
                                 "imageUrl",
                                 "ERPLYSKU",
                                 "PSWPRICELISTITEMCATEGORY",
+                                "mfrCode",
                                 DB::raw("CONCAT(ItemName,' ', ColourName, ' ',SizeID) as productName"),
                             ]
                         )
@@ -572,6 +574,7 @@ class SchoolApiService
                             "ERPLYSKU",
                             "Category_Name",
                             "PSWPRICELISTITEMCATEGORY",
+                            "mfrCode",
                             DB::raw("CONCAT(ItemName,' ', ColourName, ' ',SizeID) as productName")
                         ])->with(['stocks' => function ($q) use ($defaultStore) {
                             $q->where("Warehouse", $defaultStore)
@@ -677,6 +680,7 @@ class SchoolApiService
                                 "imageUrl",
                                 "ERPLYSKU",
                                 "PSWPRICELISTITEMCATEGORY",
+                                "mfrCode",
                                 DB::raw("CONCAT(ItemName,' ', ColourName, ' ',SizeID) as productName"),
                             ])
                             ->with(['stocks' => function ($q) use ($currentWarehouse) {
@@ -784,7 +788,10 @@ class SchoolApiService
                 ]
             )->orderBy("newsystem_product_size_sort_order_live.sort_order", "asc")
             // ->orderBy("newsystem_product_variation_live.ColourName", "asc")
+
             ->paginate($pagination);
+
+
 
         return response()->json(["status" => 200, "records" => $datas]);
     }
@@ -1528,8 +1535,10 @@ class SchoolApiService
 
 
                         $lines = array(
-                            "ICSC" => @$axDetails->ITEMID ?? @$axDetails->erplyID  . '-' . @$axDetails->ColourID . '-' . @$axDetails->CONFIGID,
-                            "ICSCBarcode" => @$axDetails->ITEMID . '' . @$axDetails->ColourID . '' . @$axDetails->SizeID,
+                            // "ICSC" => @$axDetails->ITEMID ?? @$axDetails->erplyID  . '-' . @$axDetails->ColourID . '-' . @$axDetails->CONFIGID,
+                            // "ICSCBarcode" => @$axDetails->ITEMID . '' . @$axDetails->ColourID . '' . @$axDetails->SizeID,
+                            "ICSC" => @$axDetails->mfrCode,
+                            "ICSCBarcode" => @$axDetails->EANBarcode,
                             "productName" => $sd->itemName,
                             "productName2" => @$axDetails->ItemName ?? $sd->itemName,
                             "itemID" => @$axDetails->ITEMID ?? @$axDetails->erplyID ,
@@ -1538,7 +1547,8 @@ class SchoolApiService
                             "colourID" => @$axDetails->ColourID,
                             "barcode" => @$axDetails->EANBarcode ?? $sd->productID,
                             "qty" => $sd->amount,
-                            "location" => $issueLocation
+                            "location" => $issueLocation,
+                            "mfrCode" => @$axDetails->mfrCode
                         );
 
                         if (@$soh) {
@@ -1577,6 +1587,7 @@ class SchoolApiService
                     return response("Invalid Sales Order ID!!!");
                 }
             }
+
 
             if ($isDebug == 1) {
                 dd($bulkPickingSlip);

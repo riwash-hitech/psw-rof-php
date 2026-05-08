@@ -76,229 +76,229 @@
 
     <body style="text-align: center;" onload="window.print()" onfocus="window.close()">
     @foreach($bulkPickingSlip as $data)
-    <table  >
-            <tbody>
-                <tr >
-                    <td width="25%">
-                        <p>{{ $data['info']->invoiceState == "FULFILLED" ? "PAID" : "UNPAID"}}</p>
-                    </td>
-                    <td width="40%">
+        <table  >
+                <tbody>
+                    <tr >
+                        <td width="25%">
+                            <p>{{ $data['info']->invoiceState == "FULFILLED" ? "PAID" : "UNPAID"}}</p>
+                        </td>
+                        <td width="40%">
 
-                    </td>
-                    <td width="5%">
-                        <h6></h6>
-                    </td>
+                        </td>
+                        <td width="5%">
+                            <h6></h6>
+                        </td>
 
-                    <td width="30%">
-                        <div class="container" style="border: 1px solid white;padding: 3px;text-align: center;display: flex;justify-content: center;">
+                        <td width="30%">
+                            <div class="container" style="border: 1px solid white;padding: 3px;text-align: center;display: flex;justify-content: center;">
 
-                            <span>{{ $data['info']->isExpress == 1 ? "EXPRESS" : '' }}</span>
+                                <span>{{ $data['info']->isExpress == 1 ? "EXPRESS" : '' }}</span>
 
-                        </div>
-                    </td>
+                            </div>
+                        </td>
 
-                </tr>
-                <tr style="width:100%">
-                    <td width="25%" colspan="2" style="text-align: center;">
-                        <!-- <img src="http://psw.synccare.com.au/psw_logo.jpg" width="120"> -->
-                        <img src="https://psw.synccare.com.au/psw-uniform1.jpg" width="220">
-                    </td>
-
-
-                    <td width="30%" colspan="2">
-                        <div class="container" style="border: 1px dashed grey;padding: 10px;text-align: center; ">
-                        <span>{{ date("d.m.Y") }} &nbsp;&nbsp;{{ date("H:i:s") }}</span><br>
-
-                        </div>
-                    </td>
-
-                </tr>
-                <tr >
-
-                    <td width="100%" colspan="4" style="text-align:center">
-                        <div class="container" style="border: 1px dashed grey;padding: 2px;text-align: center;display: flex;justify-content: center;margin-top:-5px;">
-
-                         Click & Collect Order
-
-                        </div>
-                        <div class="container" style="border: 1px dashed grey;padding: 5px;text-align: center;display: flex;justify-content: center;margin-top:-1px;">
-
-                        {{ $data['schoolInfo']->SchoolName }}
-
-                        </div>
-                    </td>
+                    </tr>
+                    <tr style="width:100%">
+                        <td width="25%" colspan="2" style="text-align: center;">
+                            <!-- <img src="http://psw.synccare.com.au/psw_logo.jpg" width="120"> -->
+                            <img src="https://psw.synccare.com.au/psw-uniform1.jpg" width="220">
+                        </td>
 
 
-                </tr>
+                        <td width="30%" colspan="2">
+                            <div class="container" style="border: 1px dashed grey;padding: 10px;text-align: center; ">
+                            <span>{{ date("d.m.Y") }} &nbsp;&nbsp;{{ date("H:i:s") }}</span><br>
 
+                            </div>
+                        </td>
 
-
-                <tr >
-                    <td width="25%" colspan="2" style="text-align:center">
-                        <div class="container" style="border: 1px dashed grey;padding: 2px;text-align: center;margin-top:-5px;">
-                             {{$data['client']->fullName }}
-
-                        </div>
-
-                    </td>
-
-                    <td   colspan="2" style="text-align:center">
-                        <div class="container" style="border: 1px dashed grey;padding: 2px;text-align: center;margin-left:-5px;margin-top:-5px;">
-                             {{ $data["info"]["number"] }}
-
-                        </div>
-
-                    </td>
-
-
-
-                </tr>
-
-                @if($data['client']->phone || $data['client']->mobile || $data['client']->email)
+                    </tr>
                     <tr >
 
-                        <td  colspan="4"  >
+                        <td width="100%" colspan="4" style="text-align:center">
+                            <div class="container" style="border: 1px dashed grey;padding: 2px;text-align: center;display: flex;justify-content: center;margin-top:-5px;">
+
+                             Click & Collect Order
+
+                            </div>
+                            <div class="container" style="border: 1px dashed grey;padding: 5px;text-align: center;display: flex;justify-content: center;margin-top:-1px;">
+
+                            {{ $data['schoolInfo']->SchoolName }}
+
+                            </div>
+                        </td>
+
+
+                    </tr>
+
+
+
+                    <tr >
+                        <td width="25%" colspan="2" style="text-align:center">
                             <div class="container" style="border: 1px dashed grey;padding: 2px;text-align: center;margin-top:-5px;">
-                                <span> {{ $data['client']->phone ? $data['client']->phone : $data['client']->mobile }} </span> &nbsp;&nbsp;&nbsp;&nbsp;
-                                <span>  {{ $data['client']->email }} </span>
+                                 {{$data['client']->fullName }}
 
                             </div>
 
                         </td>
 
+                        <td   colspan="2" style="text-align:center">
+                            <div class="container" style="border: 1px dashed grey;padding: 2px;text-align: center;margin-left:-5px;margin-top:-5px;">
+                                 {{ $data["info"]["number"] }}
+
+                            </div>
+
+                        </td>
+
+
+
                     </tr>
-                @endif
 
-                <tr>
-                    <td colspan="4">
-                        <div class="container" style="border: 1px dashed grey;padding: 3px;text-align: center;display: flex;justify-content: center;margin-top:-5px;">
+                    @if($data['client']->phone || $data['client']->mobile || $data['client']->email)
+                        <tr >
 
+                            <td  colspan="4"  >
+                                <div class="container" style="border: 1px dashed grey;padding: 2px;text-align: center;margin-top:-5px;">
+                                    <span> {{ $data['client']->phone ? $data['client']->phone : $data['client']->mobile }} </span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <span>  {{ $data['client']->email }} </span>
 
-                            {!! DNS1D::getBarcodeSVG((string)$data["info"]["number"], 'C128',2.5,30,'black', false) !!}
+                                </div>
 
+                            </td>
 
-                        </div>
-                    </td>
-                </tr>
+                        </tr>
+                    @endif
 
-
-            </tbody>
-        </table>
-
-        <table class="contents"  >
-            <tbody>
-
-                @foreach($data["productDetails"] as $p)
-                <tr>
-                    <td width="25%">
-                        <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px ">
-                             {{ $p['itemID']  }}
-
-                        </div>
-                    </td>
-                    <td width="5%" colspan="3">
-                        <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px">
-                        {{ substr($p['productName2'], 0, 25) }}
-
-                        </div>
-                    </td>
-
-                    <td width="10%">
-                        <div class=" " style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px">
-
-                        H
-
-                        </div>
-                    </td>
-                    <td width="10%" rowspan="2">
-                        <div class=" " style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px">
-                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;
-
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td width="25%">
-                        <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px ">
-                             {{ $p['configID']  }}
-
-                        </div>
-                    </td>
-                    <td width="5%">
-                        <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center; font-size:13px">
-                        {{ $p['colourID'] }}
-
-                        </div>
-                    </td>
-                    <td width="20%"  >
-
-                        <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px ">
-                            {{ $p['Size'] }}
-
-                        </div>
-                    </td>
-
-                    <td width="30%"  >
-                        <div class=" " style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px">
-
-                            @if(@$p['location'])
-                                @if($p['location'] == "DEF")
-                                    &nbsp;
-                                @else
-                                    {{ @$p['location'] }}
-                                @endif
-                            @else
-                                &nbsp;
-                            @endif
-                         </div>
+                    <tr>
+                        <td colspan="4">
+                            <div class="container" style="border: 1px dashed grey;padding: 3px;text-align: center;display: flex;justify-content: center;margin-top:-5px;">
 
 
-                    </td>
-                    <td width="15%">
-                        <div class=" " style="border: 1px solid grey;padding: 1px;text-align: center;font-size:13px">
-
-                            {{ (int)$p['qty'] }}
-                        </div>
-                    </td>
-
-                </tr>
+                                {!! DNS1D::getBarcodeSVG((string) $data["info"]["number"], 'C128', 2.5, 30, 'black', false) !!}
 
 
-
-                @endforeach
-
-
-
-                <td colspan="6">
-                    <div class="container" style="border-top: 1px solid black;padding: 0px;text-align: left;text-decoration: underline;font-size: 16px;font-weight: bold;height: 1px;">
-
-                   </div>
-                </td>
-
-                <tr class="footer">
-                    <td  colspan="3" style="text-align: right;">
-                           Cross Check Total Qty:
-                    </td>
+                            </div>
+                        </td>
+                    </tr>
 
 
-                    <td width="20%"  >
-                        <div class="div-inline">
-                              {{ $data["totQty"] }}
-                          </div>
-                          <div class="div-inline" style="border: 1px dashed grey !important">
-                             &nbsp;
-                          </div>
+                </tbody>
+            </table>
 
+            <table class="contents"  >
+                <tbody>
+
+                    @foreach($data["productDetails"] as $p)
+                        <tr>
+                            <td width="25%">
+                                <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px ">
+                                     {{ $p['itemID']  }}
+
+                                </div>
+                            </td>
+                            <td width="5%" colspan="3">
+                                <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px">
+                                {{ substr($p['productName2'], 0, 25) }}
+
+                                </div>
+                            </td>
+
+                            <td width="10%">
+                                <div class=" " style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px">
+
+                                H
+
+                                </div>
+                            </td>
+                            <td width="10%" rowspan="2">
+                                <div class=" " style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px">
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td width="25%">
+                                <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px ">
+                                  {{ $p['mfrCode']  }}
+
+                                </div>
+                            </td>
+                            <td width="5%">
+                                <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center; font-size:13px">
+                            {{-- {{ $p['colourID'] }} --}}
+
+                                </div>
+                            </td>
+                            <td width="20%"  >
+
+                                <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px ">
+                                    {{-- {{ $p['Size'] }} --}}
+
+                                </div>
+                            </td>
+
+                            <td width="30%"  >
+                                <div class=" " style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px">
+
+                                    @if(@$p['location'])
+                                        @if($p['location'] == "DEF")
+                                            &nbsp;
+                                        @else
+                                            {{ @$p['location'] }}
+                                        @endif
+                                    @else
+                                        &nbsp;
+                                    @endif
+                                 </div>
+
+
+                            </td>
+                            <td width="15%">
+                                <div class=" " style="border: 1px solid grey;padding: 1px;text-align: center;font-size:13px">
+
+                                    {{ (int) $p['qty'] }}
+                                </div>
+                            </td>
+
+                        </tr>
+
+
+
+                    @endforeach
+
+
+
+                    <td colspan="6">
+                        <div class="container" style="border-top: 1px solid black;padding: 0px;text-align: left;text-decoration: underline;font-size: 16px;font-weight: bold;height: 1px;">
+
+                       </div>
                     </td>
 
-                </tr>
+                    <tr class="footer">
+                        <td  colspan="3" style="text-align: right;">
+                               Cross Check Total Qty:
+                        </td>
+
+
+                        <td width="20%"  >
+                            <div class="div-inline">
+                                  {{ $data["totQty"] }}
+                              </div>
+                              <div class="div-inline" style="border: 1px dashed grey !important">
+                                 &nbsp;
+                              </div>
+
+                        </td>
+
+                    </tr>
 
 
 
 
-            </tbody>
-        </table>
+                </tbody>
+            </table>
 
     @endforeach
 
