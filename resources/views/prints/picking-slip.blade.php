@@ -225,7 +225,7 @@
             </tbody>
                 <tr class="header" style="width:100%">
                     <td width="25%" style="font-size:{{ $data["info"]->paperSize == 1 ? 16 : 12 }}">
-                        Item ColourID Config
+                        MFR Code
                     </td>
                     <td width="5%" style="font-size:{{ $data["info"]->paperSize == 1 ? 16 : 12 }}">
                         Size

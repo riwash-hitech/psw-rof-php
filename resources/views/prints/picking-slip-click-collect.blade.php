@@ -192,7 +192,7 @@
                         <tr>
                             <td width="25%">
                                 <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px ">
-                                     {{ $p['itemID']  }}
+                                {{-- {{ $p['itemID'] }}  --}}
 
                                 </div>
                             </td>
@@ -221,7 +221,7 @@
                         <tr>
                             <td width="25%">
                                 <div class="container" style="border: 1px dashed grey;padding: 1px;text-align: center;font-size:13px ">
-                                  {{ $p['mfrCode']  }}
+                                 MFR: {{ $p['mfrCode']  }}
 
                                 </div>
                             </td>
