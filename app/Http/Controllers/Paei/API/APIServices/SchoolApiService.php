@@ -1516,22 +1516,10 @@ class SchoolApiService
 
                         $warehouseCode = $currentWarehouse["warehouseCode"] ?? null;
 
-                        function getIssueByWarehouse($data, $warehouseCode)
-                        {
-                            foreach ($data as $item) {
-                                if (
-                                    ($item['location'] ?? null) == $warehouseCode &&
-                                    ($item['preferred'] ?? null) == "1"
-                                ) {
-                                    return $item['issuelocation'] ?? null;
-                                }
-                            }
-                            return null;
-                        }
 
                         $issueLocation =
-                            getIssueByWarehouse($primary, $warehouseCode)
-                            ?? getIssueByWarehouse($secondary, $warehouseCode);
+                            $this->getIssueByWarehouse($primary, $warehouseCode)
+                            ?? $this->getIssueByWarehouse($secondary, $warehouseCode);
 
 
 
@@ -1676,6 +1664,20 @@ class SchoolApiService
         }
     }
 
+
+    private function getIssueByWarehouse($data, $warehouseCode)
+    {
+        foreach ($data as $item) {
+            if (
+                ($item['location'] ?? null) == $warehouseCode &&
+                ($item['preferred'] ?? null) == "1"
+            ) {
+                return $item['issuelocation'] ?? null;
+            }
+        }
+
+        return null;
+    }
 
     function getPreferred($data)
     {
