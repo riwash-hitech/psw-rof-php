@@ -341,7 +341,7 @@ class GetSalesDocumentService
                     "finalPriceWithVAT" => @$d["finalPriceWithVAT"],
                     "rowNetTotal" => @$d["rowNetTotal"],
                     "rowVAT" => @$d["rowVAT"],
-                    "rowTotal" => @$d["rowTotal"],
+                    "rowTotal" => @$d["finalNetPrice"],
                     "deliveryDate" => @$d["deliveryDate"] == '' ? "0000-00-00 00:00:00" : @$d["deliveryDate"],
                     "returnReasonID" => @$d["returnReasonID"],
                     "employeeID" => @$d["employeeID"],
