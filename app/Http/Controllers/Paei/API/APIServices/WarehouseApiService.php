@@ -649,11 +649,21 @@ Thank You';
         $orders = SalesDocument:: //with("SalesDetails.axRelation")
             with([
                 'SalesDetails' => function ($salesDetailsQuery) use ($currentWarehouse) {
-                    $salesDetailsQuery->where('clientCode', $currentWarehouse['clientCode'])
-                        ->with(['axRelation' => function ($axRelationQuery) use ($currentWarehouse) {
-                            $axRelationQuery->where('DefaultStore', $currentWarehouse['warehouseCode'])
-                                ->orWhere('SecondaryStore', $currentWarehouse['warehouseCode']);
-                        }]);
+
+                    $salesDetailsQuery
+                        ->where('clientCode', $currentWarehouse['clientCode'])
+                        ->selectRaw('
+                newsystem_sales_document_details.*,
+        ROUND(IFNULL(rowTotal, finalNetPrice), 2) as rowTotal
+            ')
+                        ->with([
+                            'axRelation' => function ($axRelationQuery) use ($currentWarehouse) {
+
+                                $axRelationQuery
+                                    ->where('DefaultStore', $currentWarehouse['warehouseCode'])
+                                    ->orWhere('SecondaryStore', $currentWarehouse['warehouseCode']);
+                            },
+                        ]);
                 },
             ])
                 ->with('Customer')
