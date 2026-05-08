@@ -466,6 +466,7 @@ class GetProductService implements UserOperationInterface
         $eanBarcode           = $product['code2'] ?? null;
         $sofTemplate          = $this->nullIfEmpty($attr['SOFTemplate'] ?? null);
         $sofName              = $this->nullIfEmpty($attr['SOFName'] ?? null);
+        $mrfCode              = $product['supplierCode'] ?? null;
         $sofOrder             = $this->nullIfEmpty($attr['SOFOrder'] ?? null);
         $sofStatus            = $this->nullIfEmpty($attr['SOFStatus'] ?? null);
         $plmStatus            = $this->nullIfEmpty($attr['PLMStatus'] ?? null);
@@ -643,6 +644,7 @@ class GetProductService implements UserOperationInterface
                 "schoolID"          => $schoolId,
                 "schoolName"        => $schoolName,
                 "CustomerGroup"     => $customerGroup,
+                'mfrCode'          => $mrfCode,
 
                 // CATEGORY
                 "Category_Name"     => $category_Name,
