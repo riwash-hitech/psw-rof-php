@@ -10,12 +10,17 @@ use App\Traits\ClientCodeTrait;
 
 class SalesDocumentDetail extends Model
 {
-    use HasFactory;//, ClientCodeTrait; 
+    use HasFactory;//, ClientCodeTrait;
     protected $table = 'newsystem_sales_document_details';
     protected $fillable = [];
     protected $guarded = [];
     // protected $hidden = ['clientCode'];
 
+
+    public function getRowTotalAttribute($value)
+    {
+        return $value ?: $this->attributes['price'];
+    }
 
     public function axRelation(){
         return $this->hasOne(LiveProductVariation::class, 'erplyID', 'productID')
@@ -25,11 +30,11 @@ class SalesDocumentDetail extends Model
     protected function getCreatedAtAttribute($val)
     {
         return Carbon::parse($val)->setTimezone('Australia/Sydney')->toDateTimeString();
-         
+
     }
     protected function getUpdatedAtAttribute($val)
     {
         return Carbon::parse($val)->setTimezone('Australia/Sydney')->toDateTimeString();
-         
+
     }
 }

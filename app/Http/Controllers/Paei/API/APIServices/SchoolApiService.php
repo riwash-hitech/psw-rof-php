@@ -1182,6 +1182,8 @@ class SchoolApiService
         // dd($reqArray, $currentWarehouse, $myCartItems, $calculateCart);
         $res = $this->api->sendRequest("saveSalesDocument", $reqArray);
 
+
+
         if ($res["status"]["errorCode"] == 0 && !empty($res['records'])) {
             // info($res);
             //now again getting sales order for synccing to local db
@@ -1195,6 +1197,7 @@ class SchoolApiService
             $localDetails["number"] = $res["records"][0]["invoiceNo"];
             $localDetails["netTotal"] = $res["records"][0]["net"];
             $localDetails["vatTotal"] = $res["records"][0]["vat"];
+            $localDetails["grandTotal"] = $res["records"][0]["total"];
             $localDetails["warehouseID"] = $currentWarehouse["warehouseID"];
             $localDetails["type"] = $type;
             $localDetails["invoiceState"] = "PENDING";
@@ -1232,6 +1235,7 @@ class SchoolApiService
                         $ci = LiveProductVariation::where("erplyID", $row["productID"])->first();
                         $makeRow["itemName"] = $ci->ItemName . ' ' . $ci->ColourName . ' ' . $ci->SizeID;
                         $makeRow["code"] = $ci->ERPLYSKU;
+                        $makeRow["rowTotal"] = $localDetails["grandTotal"];
                     }
 
                     if (@$litem["discount"]) {
