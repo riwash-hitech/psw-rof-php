@@ -17,10 +17,6 @@ class SalesDocumentDetail extends Model
     // protected $hidden = ['clientCode'];
 
 
-    public function getRowTotalAttribute($value)
-    {
-        return $value ?: $this->attributes['price'];
-    }
 
     public function axRelation(){
         return $this->hasOne(LiveProductVariation::class, 'erplyID', 'productID')

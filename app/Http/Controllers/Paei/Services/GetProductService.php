@@ -209,7 +209,8 @@ class GetProductService implements UserOperationInterface
         $sizeId               = $this->nullIfEmpty($attr['SizeID'] ?? null);
         $configId             = $this->nullIfEmpty($attr['CONFIGID'] ?? null);
         $configName           = $this->nullIfEmpty($attr['ConfigName'] ?? null);
-        $eanBarcode           = $this->nullIfEmpty($attr['EANBarcode'] ?? null);
+        $eanBarcode           =  $product['code2'] ?? null;
+         // $eanBarcode           = $this->nullIfEmpty($attr['EANBarcode'] ?? ($product['code'] ?? null)); --- IGNORE ---
         $sofTemplate          = $this->nullIfEmpty($attr['SOFTemplate'] ?? null);
         $sofName              = $this->nullIfEmpty($attr['SOFName'] ?? null);
         $sofOrder             = $this->nullIfEmpty($attr['SOFOrder'] ?? null);
@@ -462,7 +463,7 @@ class GetProductService implements UserOperationInterface
         $itemName             = $this->nullIfEmpty($attr['Matrix_Product_Name'] ?? ($product['name'] ?? null));
         $configId             = $this->nullIfEmpty($attr['CONFIGID'] ?? null);
         $configName           = $this->nullIfEmpty($attr['CONFIGNAME'] ?? null);
-        $eanBarcode           = $this->nullIfEmpty($attr['EANBarcode'] ?? ($product['code'] ?? null));
+        $eanBarcode           = $product['code2'] ?? null;
         $sofTemplate          = $this->nullIfEmpty($attr['SOFTemplate'] ?? null);
         $sofName              = $this->nullIfEmpty($attr['SOFName'] ?? null);
         $sofOrder             = $this->nullIfEmpty($attr['SOFOrder'] ?? null);
