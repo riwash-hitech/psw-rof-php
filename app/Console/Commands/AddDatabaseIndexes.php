@@ -61,6 +61,8 @@ class AddDatabaseIndexes extends Command
         $addIndexIfNotExists('newsystem_product_variation_live', 'idx_secondary_store_var', 'SecondaryStore');
         $addIndexIfNotExists('newsystem_product_variation_live', 'idx_modified_var', 'ItemLastModified');
         $addIndexIfNotExists('newsystem_product_variation_live', 'idx_icsc_var', 'ICSC');
+        $addIndexIfNotExists('newsystem_product_variation_live', 'idx_mrfCode_var', 'mfrCode');
+        $addIndexIfNotExists('newsystem_product_variation_live', 'idx_eanBarcode_var', 'EANBarcode');
 
         // =========================
         // PRODUCT GROUP / LOCATION
