@@ -246,6 +246,7 @@
                 </tr>
 
                 @foreach($data["productDetails"] as $p)
+
                 <tr>
                     <td width="25%">
                         <div class="container" style="border: 1px solid black;padding: 1px;text-align: center;font-size:{{ $data["info"]->paperSize == 1 ? 16 : 12 }}">

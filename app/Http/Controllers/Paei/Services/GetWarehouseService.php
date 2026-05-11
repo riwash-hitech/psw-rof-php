@@ -25,7 +25,6 @@ class GetWarehouseService implements UserOperationInterface{
         foreach($warehouses as $p){
             $this->warehouseSaveUpdate($p);
 
-            $this->newSystemWarehouseSaveUpdate($p);
         }
 
         foreach ($warehouses as $p) {
@@ -96,6 +95,7 @@ class GetWarehouseService implements UserOperationInterface{
             [
                 "entity" =>'PSW',
                 "erplyID"    => $product['id']
+
             ],
             [
                 "entity" => 'PSW',

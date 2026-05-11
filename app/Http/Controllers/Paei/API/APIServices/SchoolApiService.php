@@ -1190,7 +1190,7 @@ class SchoolApiService
         $res = $this->api->sendRequest("saveSalesDocument", $reqArray);
 
 
-
+//  return $res;
         if ($res["status"]["errorCode"] == 0 && !empty($res['records'])) {
             // info($res);
             //now again getting sales order for synccing to local db
@@ -1539,7 +1539,8 @@ class SchoolApiService
                             // "ICSCBarcode" => @$axDetails->ITEMID . '' . @$axDetails->ColourID . '' . @$axDetails->SizeID,
                             "ICSC" => @$axDetails->mfrCode,
                             "ICSCBarcode" => @$axDetails->EANBarcode,
-                            "productName" => $sd->itemName,
+                            // "productName" => $sd->itemName,
+                            "productName" => @$axDetails->ItemName,
                             "productName2" => @$axDetails->ItemName ?? $sd->itemName,
                             "itemID" => @$axDetails->ITEMID ?? @$axDetails->erplyID ,
                             "configID" => @$axDetails->CONFIGID,
@@ -1576,7 +1577,6 @@ class SchoolApiService
                             return is_numeric($part) ? (int) $part : strtolower($part); // Convert to lowercase
                         }, $parts);
                     });
-
                     $bulkPickingSlip[$key]["info"] = $data;
                     $bulkPickingSlip[$key]["axWarehouse"] = $axWarehouse;
                     $bulkPickingSlip[$key]["schoolInfo"] = $schoolInfo;
