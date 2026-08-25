@@ -536,8 +536,111 @@ class SchoolApiService
 
         $newResults = collect();
 
+        // Batch-fetch everything the "expand colours" branch below needs for ALL items at once,
+        // instead of running 1 colours-query + 3 queries per colour PER item (was an N+1 that could
+        // add up to thousands of extra round-trips for a store with many multi-variation products).
+        $webskusToExpand = $results
+            ->reject(fn($item) => $item->variations_count == 1 && !$item->variations->isEmpty())
+            ->pluck('WEBSKU')
+            ->unique()
+            ->values()
+            ->all();
 
-        $results->each(function ($item) use ($currentWarehouse, $newResults, $debug) {
+        $coloursByWebsku = collect();
+        $vInfoByWebskuColourName = collect();
+        $variationCountMap = [];
+        $variationsByWebskuColourID = collect();
+
+        if (!empty($webskusToExpand)) {
+            $coloursByWebsku = LiveProductVariation::select("WEBSKU", "ColourName", "ColourID")
+                ->whereIn("WEBSKU", $webskusToExpand)
+                ->where("erplyID", '>', 0)
+                ->where("erplyEnabled", 1)
+                ->where(function ($q) use ($currentWarehouse) {
+                    $q->where("DefaultStore", $currentWarehouse["warehouseCode"])
+                        ->orWhere("SecondaryStore", $currentWarehouse["warehouseCode"]);
+                })
+                ->groupBy("WEBSKU", "ColourName", "ColourID")
+                ->orderBy("ColourName", "asc")
+                ->get()
+                ->groupBy("WEBSKU")
+                ->map(fn($rows) => $rows->pluck("ColourName", "ColourID")->toArray());
+
+            // Equivalent of the old per-colour `vInfo` lookup (full columns, matched by ColourName).
+            // The original `->first()` had no ORDER BY (so its pick was DB-order-dependent/undefined);
+            // order by id here so which row is picked as "representative" is at least deterministic.
+            $vInfoByWebskuColourName = LiveProductVariation::whereIn("WEBSKU", $webskusToExpand)
+                ->where('erplyID', '>', 0)
+                ->where("erplyEnabled", 1)
+                ->where('PSWPRICELISTITEMCATEGORY', '>', 0)
+                ->orderBy('id')
+                ->get()
+                ->groupBy(fn($v) => $v->WEBSKU . '|' . $v->ColourName)
+                ->map(fn($rows) => $rows->first());
+
+            // Equivalent of the old per-colour `variationTotalCount`.
+            $variationCountRows = LiveProductVariation::select("WEBSKU", "ColourID", DB::raw("COUNT(*) as total"))
+                ->whereIn("WEBSKU", $webskusToExpand)
+                ->where('PSWPRICELISTITEMCATEGORY', '>', 0)
+                ->where("erplyEnabled", 1)
+                ->where('erplyID', '>', 0)
+                ->where(function ($query) {
+                    $query->orWhereNotNull('defaultStore')
+                        ->orWhereNotNull('secondaryStore');
+                })
+                ->groupBy("WEBSKU", "ColourID")
+                ->get();
+            foreach ($variationCountRows as $row) {
+                $variationCountMap[$row->WEBSKU][$row->ColourID] = $row->total;
+            }
+
+            // Equivalent of the old per-colour `allVariations` (+ stocks eager load).
+            $variationsByWebskuColourID = LiveProductVariation::whereIn("WEBSKU", $webskusToExpand)
+                ->where("erplyEnabled", 1)
+                ->where('PSWPRICELISTITEMCATEGORY', '>', 0)
+                ->where('erplyID', '>', 0)
+                ->select([
+                    "ICSC",
+                    "WEBSKU",
+                    "erplyID as productID",
+                    "SchoolID",
+                    "SchoolName",
+                    "ColourName",
+                    "ColourID",
+                    "SizeID",
+                    "ItemName",
+                    "ERPLYSKU",
+                    "RetailSalesPrice",
+                    "RetailSalesPrice2",
+                    "DefaultStore",
+                    "imageUrl",
+                    "PSWPRICELISTITEMCATEGORY",
+                    "mfrCode",
+                    DB::raw("CONCAT(ItemName,' ', ColourName, ' ',SizeID) as productName"),
+                ])
+                ->with(['stocks' => function ($q) use ($currentWarehouse) {
+                    $q->where("Warehouse", $currentWarehouse["warehouseCode"])
+                        ->select(["ICSC", "Warehouse", "AvailablePhysical as Stock"]);
+                }])
+                ->get()
+                ->each(function ($variation) use ($currentWarehouse) {
+                    if (is_null($variation->stocks)) {
+                        $variation->setRelation('stocks', collect(
+                            [
+                                "ICSC" => $variation->ICSC,
+                                "Warehouse" => $currentWarehouse["warehouseCode"],
+                                "Stock" => "0", // Default stock value
+                            ]
+                        ));
+                    }
+                    // ColourID is only needed to group these rows below; it wasn't part of the
+                    // original `allVariations` select, so keep it out of the serialized output.
+                    $variation->makeHidden('ColourID');
+                })
+                ->groupBy(fn($v) => $v->WEBSKU . '|' . $v->ColourID);
+        }
+
+        $results->each(function ($item) use ($currentWarehouse, $newResults, $debug, $coloursByWebsku, $vInfoByWebskuColourName, $variationCountMap, $variationsByWebskuColourID) {
             $firstVar = $item->variations->first();
 
             if ($firstVar) {
@@ -601,105 +704,17 @@ class SchoolApiService
                 }
                 $newResults->push($item);
             } else {
-                $colours = LiveProductVariation::select("ColourName", "ColourID")
-                    ->where("WEBSKU", $item->WEBSKU)
-                    ->where("erplyID", '>', 0)
-                    ->where("erplyEnabled", 1)
-                    ->where(function ($q) use ($currentWarehouse) {
-                        $q->where("DefaultStore", $currentWarehouse["warehouseCode"])
-                            ->orWhere("SecondaryStore", $currentWarehouse["warehouseCode"]);
-                    })
-                    ->groupBy("ColourName")
-                    ->orderBy("ColourName", "asc")
-                    ->pluck("ColourName", "ColourID")
-                    ->toArray();
+                $colours = $coloursByWebsku->get($item->WEBSKU, []);
                 if ($debug == 100) {
                     if ($item->WEBSKU == '19859_4700072_0') {
                         dd($item, $colours);
                     }
                 }
                 foreach ($colours as $key => $color) {
-                    // $vInfo = LiveProductVariation::where("WEBSKU", $item->WEBSKU)->where("erplyEnabled", 1)->where("ColourName", $color)->where('PSWPRICELISTITEMCATEGORY', '>', 0)->first();
-                    // if (!$vInfo) {
-                    //     $vInfo = LiveProductVariation::where("WEBSKU", $item->WEBSKU)->where("erplyEnabled", 1)->where("ColourName", $color)->first();
-                    // }
-                    // $variationTotalCount = LiveProductVariation::where("WEBSKU", $item->WEBSKU)->where("erplyEnabled", 1)->where("ColourID", $key)->count();
-                    // $newMatrixProduct = clone $item;
-                    // if($debug == 100){
-                    //     if($item->WEBSKU == '19871_4700072_0'){
-                    //         dd($item, $colours, $vInfo);
-                    //     }
-                    // }
-                    // // Modify the clone to reflect the current variation's details
-                    // $newMatrixProduct->ColourName = $color;
-                    // $newMatrixProduct->ColourID = $key;
-                    // if (@$vInfo->PSWPRICELISTITEMCATEGORY > 0) {
-                    //     $newMatrixProduct->PSWPRICELISTITEMCATEGORY = $vInfo->PSWPRICELISTITEMCATEGORY;
-                    //     $newMatrixProduct->Category_Name = $vInfo->Category_Name;
-                    // }
-                    // $newMatrixProduct->variations_count = $variationTotalCount;
-                    // $newMatrixProduct->ItemName = $newMatrixProduct->ItemName . ' ' . $color;
-                    // $newMatrixProduct->SizeID = $vInfo->SizeID;
-                    // $newMatrixProduct->RetailSalesPrice = $vInfo->RetailSalesPrice;
-                    // $newMatrixProduct->imageUrl = $vInfo->imageUrl;
-                    // if (@$vInfo->PSWPRICELISTITEMCATEGORY > 0){
-                    //     $newResults->push($newMatrixProduct);
-                    // }
-
-                    $vInfo = LiveProductVariation::where("WEBSKU", $item->WEBSKU)->where('erplyID', '>', 0)
-                        ->where("erplyEnabled", 1)
-                        ->where("ColourName", $color)
-                        ->where('PSWPRICELISTITEMCATEGORY', '>', 0)->first();
+                    $vInfo = $vInfoByWebskuColourName->get($item->WEBSKU . '|' . $color);
                     if ($vInfo) {
-                        $variationTotalCount = LiveProductVariation::where("WEBSKU", $item->WEBSKU)
-                            ->where('PSWPRICELISTITEMCATEGORY', '>', 0)
-                            ->where("erplyEnabled", 1)
-                            ->where('erplyID', '>', 0)
-                            ->where("ColourID", $key)
-                            ->where(function ($query) {
-                                $query->orWhereNotNull('defaultStore')
-                                    ->orWhereNotNull('secondaryStore');
-                            })
-                            ->count();
-                        $allVariations = LiveProductVariation::where("WEBSKU", $item->WEBSKU)->where("erplyEnabled", 1)->where("ColourID", $key)
-                            ->where('PSWPRICELISTITEMCATEGORY', '>', 0)
-                            ->where('erplyID', '>', 0)
-                            ->select([
-                                "ICSC",
-                                "WEBSKU",
-                                "erplyID as productID",
-                                "SchoolID",
-                                "SchoolName",
-                                "ColourName",
-                                "SizeID",
-                                "ItemName",
-                                "ERPLYSKU",
-                                "RetailSalesPrice",
-                                "RetailSalesPrice2",
-                                "DefaultStore",
-                                "imageUrl",
-                                "ERPLYSKU",
-                                "PSWPRICELISTITEMCATEGORY",
-                                "mfrCode",
-                                DB::raw("CONCAT(ItemName,' ', ColourName, ' ',SizeID) as productName"),
-                            ])
-                            ->with(['stocks' => function ($q) use ($currentWarehouse) {
-                                $q->where("Warehouse", $currentWarehouse["warehouseCode"])
-                                    ->select(["ICSC", "Warehouse", "AvailablePhysical as Stock"]);
-                            }])
-                            ->get();
-                        $allVariations->each(function ($variation)use($currentWarehouse) {
-                            if (is_null($variation->stocks)) {
-                                $variation->setRelation('stocks', collect(
-                                    [
-                                        "ICSC" => $variation->ICSC,
-                                        "Warehouse" => $currentWarehouse["warehouseCode"],
-                                        "Stock" => "0", // Default stock value
-                                    ],
-                                ));
-                            }
-                        });
-
+                        $variationTotalCount = $variationCountMap[$item->WEBSKU][$key] ?? 0;
+                        $allVariations = $variationsByWebskuColourID->get($item->WEBSKU . '|' . $key, collect())->values();
 
                         $newMatrixProduct = clone $item;
                         // Modify the clone to reflect the current variation's details
@@ -1521,9 +1536,8 @@ class SchoolApiService
                         if (@$axDetails) {
                             $soh = LiveItemByLocation::where("ICSC", @$axDetails->ICSC)->where('Warehouse', $currentWarehouse["warehouseCode"])->first();
                         }
-
-                        $primary = json_decode($axDetails['primaryJson'], true) ?? [];
-                        $secondary = json_decode($axDetails['secondaryJson'], true) ?? [];
+                        $primary = json_decode($axDetails['primaryJson'] ?? '{}', true) ?? [];
+                        $secondary = json_decode($axDetails['secondaryJson'] ?? '{}', true) ?? [];
 
                         $warehouseCode = $currentWarehouse["warehouseCode"] ?? null;
 

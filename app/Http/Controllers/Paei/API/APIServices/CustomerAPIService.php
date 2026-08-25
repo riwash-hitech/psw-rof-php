@@ -1,10 +1,10 @@
 <?php
 namespace App\Http\Controllers\Paei\API\APIServices;
 
-use App\Classes\Except; 
+use App\Classes\Except;
 use App\Classes\UserLogger;
 use App\Http\Controllers\Paei\Services\GetCustomerService;
-use App\Http\Controllers\Services\EAPIService; 
+use App\Http\Controllers\Services\EAPIService;
 use App\Models\PAEI\Customer;
 use App\Models\PAEI\CustomerGroup;
 use App\Models\PAEI\Warehouse;
@@ -44,7 +44,7 @@ class CustomerAPIService{
     }
 
     public function getCustomer($req){
-        
+
         if(isset($req->deleted) == 0){
             $req->deleted = 0;
         }
@@ -183,7 +183,7 @@ class CustomerAPIService{
             $q->where('clientCode', $this->api->client->clientCode);
             $q->where('deleted', $req->deleted);
             foreach ($requestData as $keys => $value) {
-                if ($value != null) { 
+                if ($value != null) {
                     if($req->strictFilter == true){
                         $q->Where($keys, $value);
                     }else{
@@ -192,7 +192,7 @@ class CustomerAPIService{
                 }
             }
         })->orderBy($req->sort_by, $req->direction)->paginate($pagination);
-         
+
         //SORTING
         // $customers = $this->sorting->letsSort($customers, $req);
 
@@ -202,7 +202,7 @@ class CustomerAPIService{
         return response()->json(["status"=>200, "success" => true, "records" => collect($customers)]);
     }
 
-    public function getAllCustomers($req){ 
+    public function getAllCustomers($req){
 
         $warehouseInfo = Warehouse::where("code", $req->warehouseID)->first();
 
@@ -337,10 +337,9 @@ class CustomerAPIService{
     public function saveCustomer($req){
 
         // $warehouseInfo = Warehouse::where("code", $req->warehouseID)->first();
-
         $currentWarehouse = $this->getCurrentWarehouse($req->homeStoreID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
 
 
@@ -461,13 +460,13 @@ class CustomerAPIService{
                 "addressTypeName"  => @$req['addressTypeName'],
                 "addressTypeName"  => @$req['customerID'],
         );
-        
+
 
         $attributes = array();
         $chunk = array();
         $count = 0;
-        foreach($req->toArray() as $key => $val){ 
-            if(str_contains($key, 'attribute') && !str_contains($key, 'longAttributeName') && !str_contains($key, 'longAttributeValue')) { 
+        foreach($req->toArray() as $key => $val){
+            if(str_contains($key, 'attribute') && !str_contains($key, 'longAttributeName') && !str_contains($key, 'longAttributeValue')) {
                 $chunk["$key"] = $val;
                 $count = $count + 1;
                 if($count == 3){
@@ -484,8 +483,8 @@ class CustomerAPIService{
         unset($chunk);
         $count = 0;
         $longAttribute = array();
-        foreach($req->toArray() as $key => $val){ 
-            if(str_contains($key, 'longAttribute')) { 
+        foreach($req->toArray() as $key => $val){
+            if(str_contains($key, 'longAttribute')) {
                 $chunk["$key"] = $val;
                 $count = $count + 1;
                 if($count == 2){
@@ -503,14 +502,15 @@ class CustomerAPIService{
         if($req->customerID){
             $old_customer = $this->customer->where('customerID', $req->customerID)->first();
         }
-        
-        $customer = $this->customer->updateOrCreate( 
+
+        $customer = $this->customer->updateOrCreate(
             [
                 "customerID" => $req['customerID'],
                 "clientCode" => $currentWarehouse["clientCode"],
             ],
             $data
         );
+
         $this->letsLog->setLog($old_customer ? json_encode($old_customer, true) : '', json_encode($customer, true), $req->id ? "Customer Updated" : "Customer Created");
         return $this->saveErply($req,$customer->id,$customer->customerID,$old_customer, $currentWarehouse["warehouseID"] );
 
@@ -523,7 +523,7 @@ class CustomerAPIService{
     {
         $currentWarehouse = $this->getCurrentWarehouse($req->warehouseID);
         if($currentWarehouse["status"] == 0){
-            return $this->failWithMessage("Invalid Warehouse ID!");    
+            return $this->failWithMessage("Invalid Warehouse ID!");
         }
 
         if($req->email != ''){
@@ -534,7 +534,7 @@ class CustomerAPIService{
                 $erply = $this->searchInErply($req->email, 1);
                 if($erply == true){
                     $customers = Customer::where("clientCode", $currentWarehouse["clientCode"])->where("email", 'like', '%'.$req->email.'%')->get();
-                    return $this->successWithDataAndMessage(count($customers) > 0 ? "Customer List." : "Customer Not Found!", $customers); 
+                    return $this->successWithDataAndMessage(count($customers) > 0 ? "Customer List." : "Customer Not Found!", $customers);
                 }
             }
             // return $this->successWithData($customers);
@@ -556,7 +556,7 @@ class CustomerAPIService{
                             ->orWhere("phone", 'like', '%'.$req->mobile.'%');
                     })->get();
 
-                    return $this->successWithDataAndMessage(count($customers) > 0 ? "Customer List." : "Customer Not Found!", $customers); 
+                    return $this->successWithDataAndMessage(count($customers) > 0 ? "Customer List." : "Customer Not Found!", $customers);
                 }
             }
 
@@ -579,7 +579,7 @@ class CustomerAPIService{
             "getAddresses" => 1,
             "getContactPersons" => 1,
             "responseMode" => "detail",
-            // "changedSince" => $this->service->getLastUpdateDate(), 
+            // "changedSince" => $this->service->getLastUpdateDate(),
             "sessionKey" => $this->api->client->sessionKey
         );
 
@@ -597,7 +597,7 @@ class CustomerAPIService{
             return true;
         }
 
-        return false; 
+        return false;
     }
 
 
@@ -605,7 +605,7 @@ class CustomerAPIService{
 
         // $currentWarehouse = $this->getCurrentWarehouse($req->homeStoreID);
         // if($currentWarehouse["status"] == 0){
-        //     return $this->failWithMessage("Invalid Warehouse ID!");    
+        //     return $this->failWithMessage("Invalid Warehouse ID!");
         // }
 
 
@@ -635,7 +635,7 @@ class CustomerAPIService{
                 "colorStatus"  => @$req['colorStatus'],
                 "image"  => @$req['image'],
                 "taxExempt"  => @$req['taxExempt'] == '' ? 0 : $req['taxExempt'],
-               
+
                 "factoringContractNumber"  => @$req['factoringContractNumber'],
                 "paysViaFactoring"  => @$req['paysViaFactoring'] == '' ? 0 : $req['paysViaFactoring'],
                 "rewardPoints"  => @$req['rewardPoints'] == '' ? 0 : $req['rewardPoints'],
@@ -662,7 +662,7 @@ class CustomerAPIService{
                 "defaultProfessionalName"  => @$req['defaultProfessionalName'],
                 "associations"  => !empty($req['associations']) ? json_encode($req['associations'], true) : '',
                 "professionals"  => !empty($req['professionals']) ? json_encode($req['professionals'], true) : '',
-               
+
                 "externalIDs"  => !empty($req['externalIDs']) ? json_encode($req['externalIDs'], true) : '',
                 "actualBalance"  => @$req['actualBalance'] == '' ? 0 : $req['actualBalance'],
                 "creditLimit"  => @$req['creditLimit'] == '' ? 0 : $req['creditLimit'],
@@ -703,7 +703,7 @@ class CustomerAPIService{
                 // "added"  => date('Y-m-d H:i:s'),
                 "emailEnabled"  => @$req['emailEnabled'] == '' ? 1 : $req['emailEnabled'],
                 "eInvoiceEnabled"  => @$req['eInvoiceEnabled'] == '' ? 0 : $req['eInvoiceEnabled'],
-               
+
                 "eInvoiceEmail"  => @$req['eInvoiceEmail'],
                 "eInvoiceReference"  => @$req['eInvoiceReference'],
                 "mailEnabled"  => @$req['mailEnabled'] == '' ? 0 : $req['mailEnabled'],
@@ -733,8 +733,8 @@ class CustomerAPIService{
         }
 
         //attributes and long attributes
-        foreach($req->toArray() as $key => $val){ 
-            if(str_contains($key, 'attribute') || str_contains($key, 'Attribute')) { 
+        foreach($req->toArray() as $key => $val){
+            if(str_contains($key, 'attribute') || str_contains($key, 'Attribute')) {
                 $param["$key"] = $val;
             }
         }
@@ -749,17 +749,17 @@ class CustomerAPIService{
             return $this->successWithDataAndMessage($msg, $res["records"][0]);
             // return response()->json(["status"=>200, "message" => $oldCustomer ? "Customer Updated Successfully." : "Customer Created Successfully"]);
         }
-        
+
         // return $this->successWithDataAndMessage("")
-        
+
         return response()->json(["status"=>200, "message" => $res]);
 
     }
 
     public function deleteCustomer($req){
-         
+
         $customer = $this->customer->where('id',$req->id)->where("clientCode", $this->api->client->clientCode)->first();
-        
+
         if(!$customer){
             return response()->json(["status"=>400, "message" => "Invalid Customer ID!"]);
         }
@@ -767,11 +767,11 @@ class CustomerAPIService{
         $param = array(
             'customerID' => $customer->customerID
         );
-         
+
         $res = $this->api->sendRequest("deleteCustomer", $param);
-        if($res['status']['errorCode'] == 0){ 
+        if($res['status']['errorCode'] == 0){
             $this->customer->where('id',$req->id)->where("clientCode", $this->api->client->clientCode)->update(["deleted"=>1]);
-            
+
             $new_data = $this->customer->where('id',$req->id)->first();
 
             //set Log
@@ -781,7 +781,7 @@ class CustomerAPIService{
         }
         return response()->json(["status"=>400, "message" => $res]);
     }
- 
+
 
 
 
